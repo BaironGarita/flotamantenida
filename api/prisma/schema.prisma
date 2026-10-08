@@ -1,0 +1,430 @@
+// =====================================================================
+//  Proyecto III-2026 ISW-811 - Sistema de Gestión de Mantenimiento
+//  Contexto: FLOTA VEHICULAR  |  Prisma 7 + MySQL
+//  26 tablas - 3FN - sin triggers, vistas, índices manuales ni ENUMs.
+//  Reglas de negocio: en los services (Node/TypeScript).
+// =====================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// =====================================================================
+// A. SEGURIDAD
+// =====================================================================
+
+model Rol {
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique @db.VarChar(50)
+  descripcion String? @db.VarChar(255)
+
+  usuarios Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id             Int       @id @default(autoincrement())
+  rolId          Int       @map("rol_id")
+  nombreCompleto String    @map("nombre_completo") @db.VarChar(150)
+  correo         String    @unique @db.VarChar(150)
+  contrasenaHash String    @map("contrasena_hash") @db.VarChar(255)
+  activo         Boolean   @default(true)
+  fechaCreacion  DateTime  @default(now()) @map("fecha_creacion")
+  ultimoAcceso   DateTime? @map("ultimo_acceso")
+
+  rol                Rol                     @relation(fields: [rolId], references: [id], onDelete: Restrict)
+  ordenesSolicitadas OrdenMantenimiento[]
+  historialActivos   HistorialEstadoActivo[]
+  historialOrdenes   HistorialEstadoOrden[]
+
+  @@map("usuarios")
+}
+
+// =====================================================================
+// B. CATÁLOGOS  (estados y clases con ID FIJO: el código los usa)
+// =====================================================================
+
+model EstadoActivo {
+  id          Int     @id
+  nombre      String  @unique @db.VarChar(50)
+  descripcion String? @db.VarChar(255)
+
+  activos             Activo[]
+  historialAnteriores HistorialEstadoActivo[] @relation("HistorialActivoAnterior")
+  historialNuevos     HistorialEstadoActivo[] @relation("HistorialActivoNuevo")
+
+  @@map("estados_activo")
+}
+
+model EstadoOrden {
+  id          Int     @id
+  nombre      String  @unique @db.VarChar(50)
+  descripcion String? @db.VarChar(255)
+
+  ordenes             OrdenMantenimiento[]
+  historialAnteriores HistorialEstadoOrden[] @relation("HistorialOrdenAnterior")
+  historialNuevos     HistorialEstadoOrden[] @relation("HistorialOrdenNuevo")
+
+  @@map("estados_orden")
+}
+
+model ClaseMantenimiento {
+  id          Int     @id
+  nombre      String  @unique @db.VarChar(50)
+  descripcion String? @db.VarChar(255)
+
+  tipos TipoMantenimiento[]
+
+  @@map("clases_mantenimiento")
+}
+
+model Prioridad {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(30)
+  nivel  Int    @unique // 1 = más baja, sirve para ordenar
+
+  ordenes OrdenMantenimiento[]
+
+  @@map("prioridades")
+}
+
+model NivelCriticidad {
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique @db.VarChar(30)
+  descripcion String? @db.VarChar(255)
+
+  activos Activo[]
+
+  @@map("niveles_criticidad")
+}
+
+model TipoCombustible {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(30)
+
+  activos Activo[]
+
+  @@map("tipos_combustible")
+}
+
+model UnidadMedida {
+  id          Int    @id @default(autoincrement())
+  nombre      String @unique @db.VarChar(30)
+  abreviatura String @db.VarChar(10)
+
+  repuestos Repuesto[]
+
+  @@map("unidades_medida")
+}
+
+model NivelCertificacion {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(30)
+  nivel  Int    @unique // 1 = Básico ... 4 = Experto
+
+  certificaciones TecnicoEspecialidad[]
+
+  @@map("niveles_certificacion")
+}
+
+// =====================================================================
+// C. MARCAS Y MODELOS  (la marca depende del modelo -> 3FN)
+// =====================================================================
+
+model Marca {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(60)
+
+  modelos Modelo[]
+
+  @@map("marcas")
+}
+
+model Modelo {
+  id      Int    @id @default(autoincrement())
+  marcaId Int    @map("marca_id")
+  nombre  String @db.VarChar(60)
+
+  marca   Marca    @relation(fields: [marcaId], references: [id], onDelete: Restrict)
+  activos Activo[]
+
+  @@unique([marcaId, nombre])
+  @@map("modelos")
+}
+
+// =====================================================================
+// D. ACTIVOS (VEHÍCULOS)
+// =====================================================================
+
+model CategoriaActivo {
+  id             Int     @id @default(autoincrement())
+  nombre         String  @unique @db.VarChar(100)
+  descripcion    String? @db.VarChar(255)
+  intervaloKm    Int     @map("intervalo_km") @db.UnsignedInt // cada cuántos km toca preventivo
+  margenAlertaKm Int     @map("margen_alerta_km") @db.UnsignedInt // "próximo a vencer" si faltan <= X km
+  activo         Boolean @default(true)
+
+  activos Activo[]
+
+  @@map("categorias_activo")
+}
+
+model Activo {
+  id                  Int      @id @default(autoincrement())
+  codigo              String   @unique @db.VarChar(20) // PREFIJO-#### (CPE-0001)
+  nombre              String   @db.VarChar(100)
+  descripcion         String?  @db.VarChar(500)
+  placa               String   @unique @db.VarChar(20)
+  modeloId            Int      @map("modelo_id")
+  anio                Int      @db.UnsignedSmallInt
+  tipoCombustibleId   Int      @map("tipo_combustible_id")
+  categoriaId         Int      @map("categoria_id")
+  nivelCriticidadId   Int      @map("nivel_criticidad_id")
+  estadoActivoId      Int      @map("estado_activo_id")
+  fechaAdquisicion    DateTime @map("fecha_adquisicion") @db.Date
+  valorReferencia     Decimal  @map("valor_referencia") @db.Decimal(14, 2)
+  kilometrajeRegistro Int      @map("kilometraje_registro") @db.UnsignedInt // km al darlo de alta
+  kilometrajeActual   Int      @map("kilometraje_actual") @db.UnsignedInt
+  imagenUrl           String?  @map("imagen_url") @db.VarChar(500)
+  fechaCreacion       DateTime @default(now()) @map("fecha_creacion")
+
+  modelo          Modelo                  @relation(fields: [modeloId], references: [id], onDelete: Restrict)
+  tipoCombustible TipoCombustible         @relation(fields: [tipoCombustibleId], references: [id], onDelete: Restrict)
+  categoria       CategoriaActivo         @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  nivelCriticidad NivelCriticidad         @relation(fields: [nivelCriticidadId], references: [id], onDelete: Restrict)
+  estadoActivo    EstadoActivo            @relation(fields: [estadoActivoId], references: [id], onDelete: Restrict)
+  ordenes         OrdenMantenimiento[]
+  historial       HistorialEstadoActivo[]
+
+  @@map("activos")
+}
+
+// =====================================================================
+// E. TÉCNICOS Y ESPECIALIDADES (N:N con atributos propios)
+// =====================================================================
+
+model Especialidad {
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique @db.VarChar(100)
+  descripcion String? @db.VarChar(255)
+  activo      Boolean @default(true)
+
+  tecnicos TecnicoEspecialidad[]
+  tipos    TipoMantenimiento[]
+
+  @@map("especialidades")
+}
+
+model Tecnico {
+  id             Int     @id @default(autoincrement())
+  identificacion String  @unique @db.VarChar(20)
+  nombreCompleto String  @map("nombre_completo") @db.VarChar(150)
+  telefono       String  @db.VarChar(30)
+  correo         String  @db.VarChar(150)
+  tarifaHora     Decimal @map("tarifa_hora") @db.Decimal(10, 2)
+  disponible     Boolean @default(true)
+  activo         Boolean @default(true)
+
+  especialidades TecnicoEspecialidad[]
+  asignaciones   OrdenTecnico[]
+
+  @@map("tecnicos")
+}
+
+// PK compuesta = no se puede repetir la misma especialidad en un técnico
+model TecnicoEspecialidad {
+  tecnicoId            Int      @map("tecnico_id")
+  especialidadId       Int      @map("especialidad_id")
+  nivelCertificacionId Int      @map("nivel_certificacion_id")
+  fechaCertificacion   DateTime @map("fecha_certificacion") @db.Date
+
+  tecnico            Tecnico            @relation(fields: [tecnicoId], references: [id], onDelete: Restrict)
+  especialidad       Especialidad       @relation(fields: [especialidadId], references: [id], onDelete: Restrict)
+  nivelCertificacion NivelCertificacion @relation(fields: [nivelCertificacionId], references: [id], onDelete: Restrict)
+
+  @@id([tecnicoId, especialidadId])
+  @@map("tecnico_especialidad")
+}
+
+// =====================================================================
+// F. REPUESTOS Y PROVEEDORES (N:N con atributos propios)
+// =====================================================================
+
+model Repuesto {
+  id             Int     @id @default(autoincrement())
+  codigo         String  @unique @db.VarChar(20)
+  nombre         String  @db.VarChar(150)
+  descripcion    String? @db.VarChar(255)
+  unidadMedidaId Int     @map("unidad_medida_id")
+  stockActual    Int     @default(0) @map("stock_actual") @db.UnsignedInt // sin signo: nunca negativo
+  stockMinimo    Int     @default(0) @map("stock_minimo") @db.UnsignedInt
+  activo         Boolean @default(true)
+
+  unidadMedida UnidadMedida        @relation(fields: [unidadMedidaId], references: [id], onDelete: Restrict)
+  proveedores  RepuestoProveedor[]
+  usos         OrdenRepuesto[]
+
+  @@map("repuestos")
+}
+
+model Proveedor {
+  id                   Int     @id @default(autoincrement())
+  cedulaJuridica       String  @unique @map("cedula_juridica") @db.VarChar(20)
+  nombre               String  @db.VarChar(150)
+  contacto             String  @db.VarChar(150)
+  telefono             String  @db.VarChar(30)
+  correo               String  @db.VarChar(150)
+  direccion            String  @db.VarChar(255)
+  condicionesGenerales String? @map("condiciones_generales") @db.VarChar(500)
+  activo               Boolean @default(true)
+
+  repuestos RepuestoProveedor[]
+  usos      OrdenRepuesto[]
+
+  @@map("proveedores")
+}
+
+// Condiciones propias de cada proveedor para cada repuesto
+model RepuestoProveedor {
+  repuestoId        Int     @map("repuesto_id")
+  proveedorId       Int     @map("proveedor_id")
+  precio            Decimal @db.Decimal(12, 2)
+  tiempoEntregaDias Int     @map("tiempo_entrega_dias") @db.UnsignedSmallInt
+
+  repuesto  Repuesto  @relation(fields: [repuestoId], references: [id], onDelete: Restrict)
+  proveedor Proveedor @relation(fields: [proveedorId], references: [id], onDelete: Restrict)
+
+  @@id([repuestoId, proveedorId])
+  @@map("repuesto_proveedor")
+}
+
+// =====================================================================
+// G. MANTENIMIENTO  (orden = encabezado, orden_repuesto = detalle)
+// =====================================================================
+
+// Clase (Preventivo/Correctivo/Emergencia) + especialidad requerida
+model TipoMantenimiento {
+  id                   Int     @id @default(autoincrement())
+  nombre               String  @unique @db.VarChar(100)
+  descripcion          String? @db.VarChar(255)
+  claseMantenimientoId Int     @map("clase_mantenimiento_id")
+  especialidadId       Int     @map("especialidad_id")
+  activo               Boolean @default(true)
+
+  clase        ClaseMantenimiento   @relation(fields: [claseMantenimientoId], references: [id], onDelete: Restrict)
+  especialidad Especialidad         @relation(fields: [especialidadId], references: [id], onDelete: Restrict)
+  ordenes      OrdenMantenimiento[]
+
+  @@map("tipos_mantenimiento")
+}
+
+model OrdenMantenimiento {
+  id                     Int       @id @default(autoincrement())
+  codigo                 String    @unique @db.VarChar(20) // OM-2026-0001
+  activoId               Int       @map("activo_id")
+  tipoMantenimientoId    Int       @map("tipo_mantenimiento_id")
+  prioridadId            Int?      @map("prioridad_id") // la define el Coordinador al diagnosticar
+  estadoOrdenId          Int       @map("estado_orden_id")
+  usuarioSolicitanteId   Int       @map("usuario_solicitante_id")
+  motivo                 String    @db.VarChar(500)
+  diagnostico            String?   @db.VarChar(1000)
+  kilometrajeAlSolicitar Int       @map("kilometraje_al_solicitar") @db.UnsignedInt
+  fechaSolicitud         DateTime  @default(now()) @map("fecha_solicitud")
+  fechaProgramada        DateTime? @map("fecha_programada") @db.Date
+  fechaInicio            DateTime? @map("fecha_inicio") // cuando pasa a En Ejecución
+  fechaCierre            DateTime? @map("fecha_cierre")
+  costoTotal             Decimal   @default(0) @map("costo_total") @db.Decimal(14, 2) // se fija al completar
+
+  activo             Activo                  @relation(fields: [activoId], references: [id], onDelete: Restrict)
+  tipoMantenimiento  TipoMantenimiento       @relation(fields: [tipoMantenimientoId], references: [id], onDelete: Restrict)
+  prioridad          Prioridad?              @relation(fields: [prioridadId], references: [id], onDelete: Restrict)
+  estadoOrden        EstadoOrden             @relation(fields: [estadoOrdenId], references: [id], onDelete: Restrict)
+  usuarioSolicitante Usuario                 @relation(fields: [usuarioSolicitanteId], references: [id], onDelete: Restrict)
+  tecnicos           OrdenTecnico[]
+  repuestos          OrdenRepuesto[]
+  historial          HistorialEstadoOrden[]
+  historialActivos   HistorialEstadoActivo[]
+
+  @@map("ordenes_mantenimiento")
+}
+
+// Técnicos de la orden: horas y tarifa histórica (costo = horas * tarifa)
+model OrdenTecnico {
+  ordenId            Int      @map("orden_id")
+  tecnicoId          Int      @map("tecnico_id")
+  fechaAsignacion    DateTime @default(now()) @map("fecha_asignacion")
+  horasTrabajadas    Decimal  @default(0) @map("horas_trabajadas") @db.Decimal(6, 2)
+  tarifaHoraAplicada Decimal  @map("tarifa_hora_aplicada") @db.Decimal(10, 2)
+
+  orden   OrdenMantenimiento @relation(fields: [ordenId], references: [id], onDelete: Restrict)
+  tecnico Tecnico            @relation(fields: [tecnicoId], references: [id], onDelete: Restrict)
+
+  @@id([ordenId, tecnicoId])
+  @@map("orden_tecnico")
+}
+
+// Repuestos usados (subtotal = cantidad * costoUnitario, NO se guarda).
+// Sin UNIQUE(orden, repuesto): una línea puede partirse en aplicada + pendiente.
+model OrdenRepuesto {
+  id            Int      @id @default(autoincrement())
+  ordenId       Int      @map("orden_id")
+  repuestoId    Int      @map("repuesto_id")
+  proveedorId   Int      @map("proveedor_id") // el service valida que exista en repuesto_proveedor
+  cantidad      Int      @db.UnsignedInt
+  costoUnitario Decimal  @map("costo_unitario") @db.Decimal(12, 2) // precio al momento del uso
+  pendiente     Boolean  @default(false) // true = sin stock, orden En Espera de Repuesto
+  fechaRegistro DateTime @default(now()) @map("fecha_registro")
+
+  orden     OrdenMantenimiento @relation(fields: [ordenId], references: [id], onDelete: Restrict)
+  repuesto  Repuesto           @relation(fields: [repuestoId], references: [id], onDelete: Restrict)
+  proveedor Proveedor          @relation(fields: [proveedorId], references: [id], onDelete: Restrict)
+
+  @@map("orden_repuesto")
+}
+
+// =====================================================================
+// H. HISTORIALES  (solo lectura: se insertan desde el service en la
+//    misma $transaction que cambia el estado; no hay endpoints de edición)
+// =====================================================================
+
+model HistorialEstadoActivo {
+  id               Int      @id @default(autoincrement())
+  activoId         Int      @map("activo_id")
+  estadoAnteriorId Int?     @map("estado_anterior_id") // NULL = registro del activo
+  estadoNuevoId    Int      @map("estado_nuevo_id")
+  usuarioId        Int      @map("usuario_id")
+  ordenId          Int?     @map("orden_id") // orden que disparó el cambio automático
+  fechaCambio      DateTime @default(now()) @map("fecha_cambio")
+  observacion      String?  @db.VarChar(500)
+
+  activo         Activo              @relation(fields: [activoId], references: [id], onDelete: Restrict)
+  estadoAnterior EstadoActivo?       @relation("HistorialActivoAnterior", fields: [estadoAnteriorId], references: [id], onDelete: Restrict)
+  estadoNuevo    EstadoActivo        @relation("HistorialActivoNuevo", fields: [estadoNuevoId], references: [id], onDelete: Restrict)
+  usuario        Usuario             @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  orden          OrdenMantenimiento? @relation(fields: [ordenId], references: [id], onDelete: Restrict)
+
+  @@map("historial_estado_activo")
+}
+
+model HistorialEstadoOrden {
+  id               Int      @id @default(autoincrement())
+  ordenId          Int      @map("orden_id")
+  estadoAnteriorId Int?     @map("estado_anterior_id") // NULL = creación de la orden
+  estadoNuevoId    Int      @map("estado_nuevo_id")
+  usuarioId        Int      @map("usuario_id")
+  fechaCambio      DateTime @default(now()) @map("fecha_cambio")
+  observacion      String?  @db.VarChar(500)
+
+  orden          OrdenMantenimiento @relation(fields: [ordenId], references: [id], onDelete: Restrict)
+  estadoAnterior EstadoOrden?       @relation("HistorialOrdenAnterior", fields: [estadoAnteriorId], references: [id], onDelete: Restrict)
+  estadoNuevo    EstadoOrden        @relation("HistorialOrdenNuevo", fields: [estadoNuevoId], references: [id], onDelete: Restrict)
+  usuario        Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+
+  @@map("historial_estado_orden")
+}
