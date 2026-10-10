@@ -47,3 +47,17 @@ Ejecutar npm test para compilar y probar las respuestas HTTP. Las pruebas usan c
 - `src/server.ts`: configuración de Express, registro de rutas y arranque del servidor.
 
 Las entidades del ejemplo de videojuegos se adaptan al modelo de flota vehicular.
+
+## Catálogos
+
+| Recurso | Listado | Detalle |
+| --- | --- | --- |
+| Roles | GET /rol | GET /rol/:id |
+| Estados de vehículos | GET /estadoActivo | GET /estadoActivo/:id |
+| Estados de órdenes | GET /estadoOrden | GET /estadoOrden/:id |
+| Categorías de vehículos | GET /categoriaActivo | GET /categoriaActivo/:id |
+
+Las respuestas usan success y data, con 400 para IDs inválidos y 404 para registros inexistentes.
+Los estados se ordenan por ID; roles y categorías se ordenan por nombre.
+Las categorías incluyen sus intervalos de mantenimiento y el indicador activo; se devuelven también las inactivas.
+Estos endpoints consultan catálogos; no incluyen usuarios, vehículos ni historiales relacionados.
