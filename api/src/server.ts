@@ -2,9 +2,10 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import morgan from "morgan";
-import { StatusCodes } from "http-status-codes";
 import { AppRoutes } from "./routes/routes";
-import { errorHandler } from "./utils/error-handler.middleware";
+import { ErrorMiddleware } from "./middlewares/error.middleware";
+import { notFoundHandler } from "./middlewares/not-found.middleware";
+import { sendSuccess } from "./utils/http-response";
 import { prisma } from "./config/prisma";
 
 export const app = express();
@@ -19,17 +20,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (request, response) => {
-  response.json({ message: "API de flotas Mantenidas funcionando correctamente" });
+  sendSuccess(response, { message: "API de Flota Mantenida funcionando correctamente" });
 });
 
 // ---- Definir rutas ----
 app.use(AppRoutes.routes);
-app.use((request, response) => {
-  response.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Ruta no encontrada" });
-});
+app.use(notFoundHandler);
 
 // Middleware centralizado para manejar errores.
-app.use(errorHandler);
+app.use(ErrorMiddleware.handleError);
 
 // Al importar el servidor en las pruebas no se abre un puerto automáticamente.
 if (require.main === module) {

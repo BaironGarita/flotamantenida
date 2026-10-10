@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const marcaService = {
@@ -9,9 +10,11 @@ export const marcaService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.marca.findUnique({
+    const resultado = await prisma.marca.findUnique({
       where: { id },
       include: { modelos: { orderBy: { nombre: "asc" } } },
     });
+    if (!resultado) throw AppError.notFound("Marca no encontrada");
+    return resultado;
   },
 };

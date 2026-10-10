@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const tipoCombustibleService = {
@@ -9,9 +10,11 @@ export const tipoCombustibleService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.tipoCombustible.findUnique({
+    const resultado = await prisma.tipoCombustible.findUnique({
       where: { id },
 
     });
+    if (!resultado) throw AppError.notFound("Tipo de combustible no encontrado");
+    return resultado;
   },
 };

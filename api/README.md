@@ -1,6 +1,6 @@
 # API de Flota Mantenida
 
-API de consultas de la Guía API NodeJS 3 adaptada al sistema de mantenimiento vehicular. Utiliza Prisma y la estructura del ejemplo de la profesora: servicios, controladores en clases, rutas por entidad y AppRoutes.
+API de las Guías API NodeJS 3 y 4 adaptada al sistema de mantenimiento vehicular. Utiliza Prisma y la estructura del ejemplo de la profesora: servicios, controladores en clases, rutas por entidad y AppRoutes.
 
 ## Desarrollo
 
@@ -47,12 +47,15 @@ GET /orden/usuario?usuarioId=6 permite consultar las órdenes del solicitante in
 
 ## Respuestas
 
-- 200: { "success": true, "data": [...] } para listados o data como objeto para detalles.
+- 200/201: { "success": true, "statusCode": 200, "message": "…", "data": [...] }. En creaciones el código es 201.
 - 400: ID inválido, filtro de solicitante inválido o JSON malformado.
 - 404: registro o ruta inexistente.
+- 409: código/placa duplicados o conflicto con el estado actual.
 - 500: error interno sin datos de conexión.
 
-Los IDs deben ser enteros positivos en el rango de Int de Prisma. Los listados devuelven todos los registros; la paginación de la guía es opcional.
+Los errores incluyen success, statusCode, error, message, timestamp y path. Los errores del DTO agregan validationErrors con field y message.
+
+Los IDs deben ser enteros positivos en el rango de Int de Prisma. GET /activo usa paginación: page=1, limit=10 por defecto, máximo 100 registros por página. Devuelve meta con total, page, limit, totalPages, hasNextPage y hasPrevPage. Los demás listados conservan sus consultas completas.
 Se incluyen registros activos e inactivos cuando el modelo tiene ese indicador.
 Los valores Decimal, como precios, tarifas y costos, se serializan como texto para conservar precisión. Las fechas se devuelven en formato ISO.
 
@@ -74,8 +77,11 @@ Los hashes de contraseña se excluyen también de los usuarios relacionados en �
 ## Estructura
 
 - src/config/prisma.ts: conexión a la base.
-- src/services: consultas de Prisma.
-- src/controllers: clases con respuestas HTTP y StatusCodes.
+- src/services: consultas de Prisma y reglas de negocio.
+- src/controllers: clases que conectan HTTP con los servicios y usan las respuestas uniformes.
+- src/dtos: esquemas Zod para crear y actualizar vehículos y solicitudes.
+- src/middlewares: validación del body, ruta inexistente y manejo único de errores.
+- src/config/logger.ts: logs diarios con Winston, rotación de 14 días y archivos excluidos de Git.
 - src/routes: rutas de cada recurso y routes.ts con AppRoutes.
 - src/utils: auxiliares de errores, asyncHandler y selección de campos públicos de usuario.
 - src/server.ts: configuración y arranque de Express.
@@ -95,7 +101,7 @@ npm test compila y ejecuta las pruebas. Estas no necesitan ni modifican la base 
 3. Revisar baseUrl en las variables de la colección.
 4. Ejecutar la colección con Run. Los listados guardan automáticamente un ID existente para cada detalle.
 
-La colección tiene 22 recursos y 91 solicitudes GET, incluyendo IDs inválidos, registros inexistentes y consultas de órdenes por solicitante. Las solicitudes de detalle necesitan datos cargados; los datos del seed sirven para estas pruebas.
+La colección conserva 22 recursos y 91 solicitudes de consultas, y agrega 18 solicitudes en la carpeta «Guía 4 - Crear, actualizar y validar». Esta carpeta crea registros reales en la base de desarrollo; ejecutarla en orden después de cargar el seed. Las solicitudes de detalle necesitan datos cargados; los datos del seed sirven para estas pruebas.
 
 ## Datos iniciales
 
@@ -103,3 +109,22 @@ El seed ya existe en prisma/seed.ts. No se ejecuta al iniciar o compilar.
 
 npx prisma db seed limpia los registros y carga datos de ejemplo. Usarlo solo cuando se desee reinicializar una base de desarrollo.
 La implementación de consultas no modifica el esquema ni los datos existentes.
+
+## Operaciones de la guía 4
+
+| Método | Ruta | Acción |
+| --- | --- | --- |
+| POST | /activo | Crear vehículo, validando los catálogos relacionados. |
+| PUT | /activo/:id | Actualizar los campos enviados; conserva los omitidos. |
+| POST | /orden | Crear una solicitud en estado Solicitada (ID 1). |
+| PUT | /orden/:id | Editar datos de una solicitud que todavía está en Solicitada. |
+
+Los ejemplos de videojuegos de la profesora se adaptan al inventario de vehículos. La orden de compra se adapta a la solicitud de mantenimiento; no recibe videojuegos, ni aplica repuestos o técnicos a una orden. Esas acciones pertenecen al ciclo posterior de mantenimiento.
+
+Los cuerpos de ejemplo están listos en la colección Postman. Los IDs numéricos no se envían como texto. Las fechas del body se envían como YYYY-MM-DD; los códigos usan CPE-0001 para vehículos y OM-2026-0001 para solicitudes (el prefijo vehicular puede tener de 2 a 5 letras mayúsculas). Se rechazan campos desconocidos y actualizaciones vacías.
+
+La imagen se registra o actualiza mediante imagenUrl; esta guía no agrega carga de archivos. No hay borrado físico: el ejemplo de la guía 4 implementa POST y PUT. El CRUD del resto de módulos del enunciado queda pendiente.
+
+Un cambio de estado del vehículo se rechaza si tiene órdenes abiertas; Rechazada, Completada y Cancelada se consideran finales. Las solicitudes no permiten cambiar de estado, costo, diagnóstico, técnicos o repuestos mediante estos endpoints. usuarioSolicitanteId es un dato de demostración, no una identidad autenticada.
+
+Los errores de Prisma P2002/P2025/P2003/P2014 se traducen a 409/404/400 según el método HTTP. El servidor responde un mensaje genérico ante errores inesperados. Los logs no guardan el body ni credenciales; se generan localmente en logs/.

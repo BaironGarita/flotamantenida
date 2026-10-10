@@ -1,37 +1,24 @@
-import type { Request, Response, NextFunction } from "express";
-import { StatusCodes } from "http-status-codes";
+import type { Request, Response } from "express";
 import { activoService } from "../services/activo.service";
+import { parseId } from "../utils/parse-id";
+import { sendSuccess, sendCreated, getPaginationParams, buildPaginationMeta, sendPaginated } from "../utils/http-response";
 
 export class ActivoController {
-  listar = async (request: Request, response: Response, next: NextFunction) => {
-    const resultado = await activoService.listar();
-    return response.status(StatusCodes.OK).json({
-      success: true,
-      data: resultado,
-    });
+  listar = async (request: Request, response: Response) => {
+    const { page, limit, skip } = getPaginationParams(request.query);
+    const { data, total } = await activoService.listar(skip, limit);
+    return sendPaginated(response, data, buildPaginationMeta(total, page, limit));
   };
 
-  obtenerPorId = async (request: Request, response: Response, next: NextFunction) => {
-    const rawId = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
-    const id = typeof rawId === "string" && /^[1-9]\d*$/.test(rawId)
-      ? Number(rawId)
-      : NaN;
+  obtenerPorId = async (request: Request, response: Response) => {
+    const resultado = await activoService.obtenerPorId(parseId(request.params.id));
+    return sendSuccess(response, resultado);
+  };
 
-    if (!Number.isSafeInteger(id) || id > 2147483647) {
-      return response.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "ID inválido",
-      });
-    }
-
-    const activo = await activoService.obtenerPorId(id);
-    if (!activo) {
-      return response.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        message: "Vehículo no encontrado",
-      });
-    }
-
-    return response.status(StatusCodes.OK).json({ success: true, data: activo });
+  crear = async (request: Request, response: Response) => {
+    return sendCreated(response, await activoService.crear(request.body), "Vehículo creado correctamente");
+  };
+  actualizar = async (request: Request, response: Response) => {
+    return sendSuccess(response, await activoService.actualizar(parseId(request.params.id), request.body), "Vehículo actualizado correctamente");
   };
 }

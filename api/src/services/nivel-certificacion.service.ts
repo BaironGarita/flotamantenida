@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const nivelCertificacionService = {
@@ -9,9 +10,11 @@ export const nivelCertificacionService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.nivelCertificacion.findUnique({
+    const resultado = await prisma.nivelCertificacion.findUnique({
       where: { id },
 
     });
+    if (!resultado) throw AppError.notFound("Nivel de certificación no encontrado");
+    return resultado;
   },
 };

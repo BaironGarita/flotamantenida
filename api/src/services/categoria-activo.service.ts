@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const categoriaActivoService = {
@@ -8,6 +9,8 @@ export const categoriaActivoService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.categoriaActivo.findUnique({ where: { id } });
+    const resultado = await prisma.categoriaActivo.findUnique({ where: { id } });
+    if (!resultado) throw AppError.notFound("Categoría de vehículo no encontrada");
+    return resultado;
   },
 };

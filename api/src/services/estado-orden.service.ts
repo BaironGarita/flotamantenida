@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const estadoOrdenService = {
@@ -8,6 +9,8 @@ export const estadoOrdenService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.estadoOrden.findUnique({ where: { id } });
+    const resultado = await prisma.estadoOrden.findUnique({ where: { id } });
+    if (!resultado) throw AppError.notFound("Estado de orden no encontrado");
+    return resultado;
   },
 };

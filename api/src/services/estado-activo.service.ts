@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const estadoActivoService = {
@@ -8,6 +9,8 @@ export const estadoActivoService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.estadoActivo.findUnique({ where: { id } });
+    const resultado = await prisma.estadoActivo.findUnique({ where: { id } });
+    if (!resultado) throw AppError.notFound("Estado de vehículo no encontrado");
+    return resultado;
   },
 };

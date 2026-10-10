@@ -2,6 +2,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 // Las pruebas HTTP no requieren acceso a una base de datos.
+process.env.LOG_LEVEL = 'silent';
 process.env.DATABASE_URL = 'mysql://test:test@127.0.0.1:3306/flota_test';
 const { app } = require('../dist/server');
 const { prisma } = require('../dist/config/prisma');
@@ -10,8 +11,12 @@ let server;
 let base;
 const originalList = prisma.activo.findMany;
 const originalDetail = prisma.activo.findUnique;
+const originalCount = prisma.activo.count;
+const originalTransaction = prisma.$transaction;
 
 before(async () => {
+  prisma.activo.count = async () => 0;
+  prisma.$transaction = async operations => Promise.all(operations);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -19,13 +24,25 @@ before(async () => {
 after(async () => {
   prisma.activo.findMany = originalList;
   prisma.activo.findUnique = originalDetail;
+  prisma.activo.count = originalCount;
+  prisma.$transaction = originalTransaction;
   await new Promise(resolve => server.close(resolve));
   await prisma.$disconnect();
 });
 
 async function request(route, options) {
   const response = await fetch(base + route, options);
-  return { status: response.status, body: await response.json() };
+  const body = await response.json();
+  // Comprobar el nuevo contrato antes de comparar los datos de las consultas previas.
+  assert.equal(body.statusCode, response.status);
+  assert.equal(typeof body.message, 'string');
+  if (!body.success) {
+    assert.equal(typeof body.error, 'string');
+    assert.equal(body.path, route);
+    assert.ok(!Number.isNaN(Date.parse(body.timestamp)));
+  }
+  const content = body.success ? { success: true, data: body.data } : { success: false, message: body.message };
+  return { status: response.status, body: content };
 }
 
 test('listar devuelve vehículos con sus relaciones', async () => {
@@ -75,7 +92,7 @@ test('errores de consultas se convierten en 500 sin exponer detalles internos', 
 });
 
 test('rutas desconocidas y JSON inválido devuelven errores en JSON', async () => {
-  assert.deepEqual(await request('/desconocida'), { status: 404, body: { success: false, message: 'Ruta no encontrada' } });
+  assert.deepEqual(await request('/desconocida'), { status: 404, body: { success: false, message: 'La ruta GET /desconocida no existe' } });
   const result = await request('/activo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
   assert.deepEqual(result, { status: 400, body: { success: false, message: 'JSON inválido' } });
 });

@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const prioridadService = {
@@ -9,9 +10,11 @@ export const prioridadService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.prioridad.findUnique({
+    const resultado = await prisma.prioridad.findUnique({
       where: { id },
 
     });
+    if (!resultado) throw AppError.notFound("Prioridad no encontrada");
+    return resultado;
   },
 };

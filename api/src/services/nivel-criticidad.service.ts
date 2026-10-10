@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const nivelCriticidadService = {
@@ -9,9 +10,11 @@ export const nivelCriticidadService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.nivelCriticidad.findUnique({
+    const resultado = await prisma.nivelCriticidad.findUnique({
       where: { id },
 
     });
+    if (!resultado) throw AppError.notFound("Nivel de criticidad no encontrado");
+    return resultado;
   },
 };

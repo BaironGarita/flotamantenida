@@ -1,6 +1,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
+process.env.LOG_LEVEL = 'silent';
 process.env.DATABASE_URL = 'mysql://test:test@127.0.0.1:3306/flota_test';
 const { app } = require('../dist/server');
 const { prisma } = require('../dist/config/prisma');
@@ -29,7 +30,17 @@ after(async () => {
 });
 async function request(route) {
   const response = await fetch(base + route);
-  return { status: response.status, body: await response.json() };
+  const body = await response.json();
+  // Comprobar el nuevo contrato antes de comparar los datos de las consultas previas.
+  assert.equal(body.statusCode, response.status);
+  assert.equal(typeof body.message, 'string');
+  if (!body.success) {
+    assert.equal(typeof body.error, 'string');
+    assert.equal(body.path, route);
+    assert.ok(!Number.isNaN(Date.parse(body.timestamp)));
+  }
+  const content = body.success ? { success: true, data: body.data } : { success: false, message: body.message };
+  return { status: response.status, body: content };
 }
 
 for (const catalog of catalogs) {

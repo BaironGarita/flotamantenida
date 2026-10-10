@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const unidadMedidaService = {
@@ -9,9 +10,11 @@ export const unidadMedidaService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.unidadMedida.findUnique({
+    const resultado = await prisma.unidadMedida.findUnique({
       where: { id },
 
     });
+    if (!resultado) throw AppError.notFound("Unidad de medida no encontrada");
+    return resultado;
   },
 };

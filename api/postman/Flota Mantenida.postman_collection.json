@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "API Flota Mantenida - Consultas",
-    "description": "Consultas de la Guía API NodeJS 3 adaptadas a flota vehicular. Ejecutar las carpetas en orden: el listado guarda el ID utilizado en el detalle. Los decimales se devuelven como texto y las fechas en ISO. Las consultas no modifican datos.",
+    "name": "API Flota Mantenida - Guías 3 y 4",
+    "description": "Consultas de la guía 3 y validación, errores, paginación, creación y actualización de la guía 4. La carpeta Guía 4 crea vehículos y solicitudes reales: ejecutar en una base de desarrollo con el seed. Los IDs de las nuevas creaciones se guardan en variables separadas. No implementa autenticación ni el ciclo completo de mantenimiento.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -2256,6 +2256,621 @@
             }
           ],
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Guía 4 - Crear, actualizar y validar",
+      "description": "Ejecutar en orden después del seed. Crea un vehículo y una solicitud por ejecución. Las actualizaciones usan esos registros nuevos; no cambian los vehículos del seed.",
+      "item": [
+        {
+          "name": "Listar vehículos con paginación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/activo?page=1&limit=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "pm.test(\"Metadatos de paginación\", () => { pm.expect(json.meta.limit).to.eql(5); pm.expect(json.data.length).to.be.at.most(5); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear vehículo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoGuia4}}\",\n  \"nombre\": \"Vehículo de demostración guía 4\",\n  \"descripcion\": \"Vehículo para probar validaciones y actualizaciones de la guía.\",\n  \"placa\": \"{{placaGuia4}}\",\n  \"modeloId\": 1,\n  \"anio\": 2024,\n  \"tipoCombustibleId\": 1,\n  \"categoriaId\": 1,\n  \"nivelCriticidadId\": 1,\n  \"fechaAdquisicion\": \"2024-06-01\",\n  \"valorReferencia\": 12500000,\n  \"kilometrajeRegistro\": 1000,\n  \"kilometrajeActual\": 1000,\n  \"imagenUrl\": \"vehiculo-guia4.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const prefix = Array.from({length:5}, () => String.fromCharCode(65 + Math.floor(Math.random()*26))).join(\"\");",
+                  "pm.collectionVariables.set(\"codigoGuia4\", prefix + \"-\" + String(Math.floor(Math.random()*10000)).padStart(4,\"0\"));",
+                  "pm.collectionVariables.set(\"placaGuia4\", \"T\" + Date.now());",
+                  "pm.collectionVariables.set(\"codigoOrdenGuia4\", \"OM-\" + new Date().getFullYear() + \"-\" + String(Math.floor(Math.random()*10000)).padStart(4,\"0\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"activoCreadoGuia4Id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar código o placa duplicados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoGuia4}}\",\n  \"nombre\": \"Vehículo de demostración guía 4\",\n  \"descripcion\": \"Vehículo para probar validaciones y actualizaciones de la guía.\",\n  \"placa\": \"{{placaGuia4}}\",\n  \"modeloId\": 1,\n  \"anio\": 2024,\n  \"tipoCombustibleId\": 1,\n  \"categoriaId\": 1,\n  \"nivelCriticidadId\": 1,\n  \"fechaAdquisicion\": \"2024-06-01\",\n  \"valorReferencia\": 12500000,\n  \"kilometrajeRegistro\": 1000,\n  \"kilometrajeActual\": 1000,\n  \"imagenUrl\": \"vehiculo-guia4.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar precio como texto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoGuia4}}\",\n  \"nombre\": \"Vehículo de demostración guía 4\",\n  \"descripcion\": \"Vehículo para probar validaciones y actualizaciones de la guía.\",\n  \"placa\": \"{{placaGuia4}}\",\n  \"modeloId\": 1,\n  \"anio\": 2024,\n  \"tipoCombustibleId\": 1,\n  \"categoriaId\": 1,\n  \"nivelCriticidadId\": 1,\n  \"fechaAdquisicion\": \"2024-06-01\",\n  \"valorReferencia\": \"12500000\",\n  \"kilometrajeRegistro\": 1000,\n  \"kilometrajeActual\": 1000,\n  \"imagenUrl\": \"vehiculo-guia4.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "pm.test(\"Detalle de validación\", () => pm.expect(json.validationErrors).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar fecha inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoGuia4}}\",\n  \"nombre\": \"Vehículo de demostración guía 4\",\n  \"descripcion\": \"Vehículo para probar validaciones y actualizaciones de la guía.\",\n  \"placa\": \"{{placaGuia4}}\",\n  \"modeloId\": 1,\n  \"anio\": 2024,\n  \"tipoCombustibleId\": 1,\n  \"categoriaId\": 1,\n  \"nivelCriticidadId\": 1,\n  \"fechaAdquisicion\": \"2026-02-30\",\n  \"valorReferencia\": 12500000,\n  \"kilometrajeRegistro\": 1000,\n  \"kilometrajeActual\": 1000,\n  \"imagenUrl\": \"vehiculo-guia4.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "pm.test(\"Detalle de validación\", () => pm.expect(json.validationErrors).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar kilometraje incoherente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoGuia4}}\",\n  \"nombre\": \"Vehículo de demostración guía 4\",\n  \"descripcion\": \"Vehículo para probar validaciones y actualizaciones de la guía.\",\n  \"placa\": \"{{placaGuia4}}\",\n  \"modeloId\": 1,\n  \"anio\": 2024,\n  \"tipoCombustibleId\": 1,\n  \"categoriaId\": 1,\n  \"nivelCriticidadId\": 1,\n  \"fechaAdquisicion\": \"2024-06-01\",\n  \"valorReferencia\": 12500000,\n  \"kilometrajeRegistro\": 1000,\n  \"kilometrajeActual\": 10,\n  \"imagenUrl\": \"vehiculo-guia4.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "pm.test(\"Detalle de validación\", () => pm.expect(json.validationErrors).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar categoría inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoGuia4}}\",\n  \"nombre\": \"Vehículo de demostración guía 4\",\n  \"descripcion\": \"Vehículo para probar validaciones y actualizaciones de la guía.\",\n  \"placa\": \"{{placaGuia4}}\",\n  \"modeloId\": 1,\n  \"anio\": 2024,\n  \"tipoCombustibleId\": 1,\n  \"categoriaId\": 2147483647,\n  \"nivelCriticidadId\": 1,\n  \"fechaAdquisicion\": \"2024-06-01\",\n  \"valorReferencia\": 12500000,\n  \"kilometrajeRegistro\": 1000,\n  \"kilometrajeActual\": 1000,\n  \"imagenUrl\": \"vehiculo-guia4.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar nombre del vehículo creado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo/{{activoCreadoGuia4Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Vehículo actualizado guía 4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar ID inválido al actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo/abc",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Vehículo actualizado guía 4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar vehículo inexistente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/activo/2147483647",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Vehículo actualizado guía 4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear solicitud de mantenimiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orden",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoOrdenGuia4}}\",\n  \"activoId\": {{activoCreadoGuia4Id}},\n  \"tipoMantenimientoId\": 1,\n  \"prioridadId\": 1,\n  \"usuarioSolicitanteId\": 1,\n  \"motivo\": \"Revisar vibración del motor del vehículo\",\n  \"kilometrajeAlSolicitar\": 1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"ordenCreadaGuia4Id\", json.data.id);",
+                  "pm.test(\"Estado inicial Solicitada\", () => pm.expect(json.data.estadoOrdenId).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar solicitud en otro estado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orden",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoOrdenGuia4}}\",\n  \"activoId\": {{activoCreadoGuia4Id}},\n  \"tipoMantenimientoId\": 1,\n  \"prioridadId\": 1,\n  \"usuarioSolicitanteId\": 1,\n  \"motivo\": \"Revisar vibración del motor del vehículo\",\n  \"kilometrajeAlSolicitar\": 1000,\n  \"estadoOrdenId\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "pm.test(\"Detalle de validación\", () => pm.expect(json.validationErrors).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar solicitante inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orden",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoOrdenGuia4}}\",\n  \"activoId\": {{activoCreadoGuia4Id}},\n  \"tipoMantenimientoId\": 1,\n  \"prioridadId\": 1,\n  \"usuarioSolicitanteId\": 2147483647,\n  \"motivo\": \"Revisar vibración del motor del vehículo\",\n  \"kilometrajeAlSolicitar\": 1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar motivo de la solicitud creada",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orden/{{ordenCreadaGuia4Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Motivo actualizado para la prueba de la guía\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar solicitud creada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orden/{{ordenCreadaGuia4Id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar actualización vacía",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orden/{{ordenCreadaGuia4Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });",
+                  "pm.test(\"Detalle de validación\", () => pm.expect(json.validationErrors).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar solicitud inexistente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orden/2147483647",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Motivo actualizado para la prueba de la guía\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder ruta inexistente con JSON uniforme",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ruta-inexistente"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP esperado\", () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", () => { pm.expect(json.statusCode).to.eql(pm.response.code); pm.expect(json.success).to.eql(pm.response.code < 400); pm.expect(json.message).to.be.a(\"string\"); if (!json.success) { pm.expect(json.error).to.be.a(\"string\"); pm.expect(json.timestamp).to.be.a(\"string\"); pm.expect(json.path).to.be.a(\"string\"); } });"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const claseMantenimientoService = {
@@ -9,9 +10,11 @@ export const claseMantenimientoService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.claseMantenimiento.findUnique({
+    const resultado = await prisma.claseMantenimiento.findUnique({
       where: { id },
 
     });
+    if (!resultado) throw AppError.notFound("Clase de mantenimiento no encontrada");
+    return resultado;
   },
 };

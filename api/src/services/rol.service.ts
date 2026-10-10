@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
 
 export const rolService = {
@@ -8,6 +9,8 @@ export const rolService = {
   },
 
   async obtenerPorId(id: number) {
-    return prisma.rol.findUnique({ where: { id } });
+    const resultado = await prisma.rol.findUnique({ where: { id } });
+    if (!resultado) throw AppError.notFound("Rol no encontrado");
+    return resultado;
   },
 };
