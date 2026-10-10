@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import { usuarioPublicoSelect } from "../utils/usuario-select";
 
 export const activoService = {
   async listar() {
@@ -26,6 +27,14 @@ export const activoService = {
         modelo: { include: { marca: true } },
         tipoCombustible: true,
         categoria: true,
+        ordenes: {
+          include: { estadoOrden: true, tipoMantenimiento: true, prioridad: true },
+          orderBy: [{ fechaSolicitud: "desc" }, { id: "desc" }],
+        },
+        historial: {
+          include: { estadoAnterior: true, estadoNuevo: true, usuario: { select: usuarioPublicoSelect } },
+          orderBy: [{ fechaCambio: "asc" }, { id: "asc" }],
+        },
         nivelCriticidad: true,
         estadoActivo: true,
       },
