@@ -1,12 +1,20 @@
 import "dotenv/config";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../generated/prisma/client";
+
+// Usar la misma conexión que las migraciones y el seed.
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("Falta configurar DATABASE_URL en el archivo .env");
+}
+const url = new URL(databaseUrl);
 const adapter = new PrismaMariaDb({
-host: process.env.DATABASE_HOST,
-user: process.env.DATABASE_USER,
-password: process.env.DATABASE_PASSWORD,
-database: process.env.DATABASE_NAME,
-connectionLimit: 5,
+  host: url.hostname,
+  port: Number(url.port || 3306),
+  user: decodeURIComponent(url.username),
+  password: decodeURIComponent(url.password),
+  database: decodeURIComponent(url.pathname.slice(1)),
+  connectionLimit: 5,
 });
-const prisma = new PrismaClient({ adapter });
-export { prisma };
+
+export const prisma = new PrismaClient({ adapter });
