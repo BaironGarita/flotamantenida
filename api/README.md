@@ -129,6 +129,22 @@ Un cambio de estado del vehículo se rechaza si tiene órdenes abiertas; Rechaza
 
 Los errores de Prisma P2002/P2025/P2003/P2014 se traducen a 409/404/400 según el método HTTP. El servidor responde un mensaje genérico ante errores inesperados. Los logs no guardan el body ni credenciales; se generan localmente en logs/.
 
+## CRUD del Avance 1
+
+Además de las consultas de catálogos, la API expone las operaciones del alcance del Avance 1:
+
+| Módulo | Operaciones |
+| --- | --- |
+| Activos | Crear, consultar con filtros, actualizar, cambiar estado administrativo, baja lógica y administrar imagen |
+| Categorías | Crear, consultar, actualizar y desactivar sin borrar categorías con activos asociados |
+| Técnicos | Crear, consultar con filtros por especialidad/disponibilidad, actualizar y administrar especialidades |
+| Especialidades | Crear, consultar y actualizar |
+| Repuestos | Crear, consultar, actualizar, consultar stock bajo y administrar proveedores |
+| Proveedores | Crear, consultar y actualizar |
+| Órdenes | Crear, consultar y filtrar por activo; las operaciones adicionales existentes son extensiones |
+
+Las rutas mantienen la convención existente (`/activo`, `/categoriaActivo`, `/tecnico`, `/especialidad`, `/repuesto`, `/proveedor` y `/orden`). Las respuestas de activos, categorías, técnicos, repuestos y órdenes incluyen campos derivados calculados en el servicio y no persistidos como columnas.
+
 ## Guía de imágenes
 
 Los archivos se guardan en assets/uploads y se sirven desde /images/nombre.ext. Se aceptan JPG, PNG y WEBP, con un máximo de 2 MB y validación de extensión, tipo y firma. Los nombres nuevos son únicos. Las imágenes subidas no se versionan; las 12 ilustraciones del seed sí se incluyen.

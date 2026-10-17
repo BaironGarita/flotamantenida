@@ -1,5 +1,7 @@
 import { AppError } from "../utils/app-error";
 import { prisma } from "../config/prisma";
+import type { CreateProveedorDto, UpdateProveedorDto } from "../dtos/catalog-crud.dto";
+import { omitUndefined } from "../utils/omit-undefined";
 
 export const proveedorService = {
   async listar() {
@@ -16,5 +18,14 @@ export const proveedorService = {
     });
     if (!resultado) throw AppError.notFound("Proveedor no encontrado");
     return resultado;
+  },
+
+  async crear(data: CreateProveedorDto) {
+    return prisma.proveedor.create({ data: omitUndefined(data) });
+  },
+
+  async actualizar(id: number, data: UpdateProveedorDto) {
+    await this.obtenerPorId(id);
+    return prisma.proveedor.update({ where: { id }, data: omitUndefined(data) });
   },
 };

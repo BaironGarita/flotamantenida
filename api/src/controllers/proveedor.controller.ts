@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { proveedorService } from "../services/proveedor.service";
 import { parseId } from "../utils/parse-id";
-import { sendSuccess } from "../utils/http-response";
+import { sendSuccess, sendCreated } from "../utils/http-response";
 
 export class ProveedorController {
   listar = async (request: Request, response: Response) => {
@@ -13,4 +13,6 @@ export class ProveedorController {
     const resultado = await proveedorService.obtenerPorId(parseId(request.params.id));
     return sendSuccess(response, resultado);
   };
+  crear = async (request: Request, response: Response) => sendCreated(response, await proveedorService.crear(request.body), "Proveedor creado correctamente");
+  actualizar = async (request: Request, response: Response) => sendSuccess(response, await proveedorService.actualizar(parseId(request.params.id), request.body), "Proveedor actualizado correctamente");
 }

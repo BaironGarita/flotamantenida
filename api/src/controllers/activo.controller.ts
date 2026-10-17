@@ -6,7 +6,10 @@ import { sendSuccess, sendCreated, getPaginationParams, buildPaginationMeta, sen
 export class ActivoController {
   listar = async (request: Request, response: Response) => {
     const { page, limit, skip } = getPaginationParams(request.query);
-    const { data, total } = await activoService.listar(skip, limit);
+    const parseOptionalId = (value: unknown, message: string) => value === undefined ? undefined : parseId(value, message);
+    const categoriaId = parseOptionalId(request.query.categoriaId, "ID de categoría inválido");
+    const estadoActivoId = parseOptionalId(request.query.estadoActivoId, "ID de estado inválido");
+    const { data, total } = await activoService.listar(skip, limit, categoriaId, estadoActivoId);
     return sendPaginated(response, data, buildPaginationMeta(total, page, limit));
   };
 
@@ -21,4 +24,6 @@ export class ActivoController {
   actualizar = async (request: Request, response: Response) => {
     return sendSuccess(response, await activoService.actualizar(parseId(request.params.id), request.body), "Vehículo actualizado correctamente");
   };
+  cambiarEstado = async (request: Request, response: Response) => sendSuccess(response, await activoService.cambiarEstadoAdministrativo(parseId(request.params.id), request.body.estadoActivoId), "Estado administrativo actualizado correctamente");
+  darDeBaja = async (request: Request, response: Response) => sendSuccess(response, await activoService.darDeBaja(parseId(request.params.id)), "Vehículo dado de baja correctamente");
 }

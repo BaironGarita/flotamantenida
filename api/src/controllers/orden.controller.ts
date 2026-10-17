@@ -5,7 +5,8 @@ import { sendSuccess, sendCreated } from "../utils/http-response";
 
 export class OrdenController {
   listar = async (request: Request, response: Response) => {
-    const resultado = await ordenService.listar();
+    const activoId = request.query.activoId === undefined ? undefined : parseId(request.query.activoId, "ID de activo inválido");
+    const resultado = await ordenService.listar(activoId);
     return sendSuccess(response, resultado);
   };
 

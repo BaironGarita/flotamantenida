@@ -5,24 +5,35 @@ import { prisma } from "../config/prisma";
 import { usuarioPublicoSelect } from "../utils/usuario-select";
 
 export const activoService = {
-  async listar(skip: number, limit: number) {
+  async listar(skip: number, limit: number, categoriaId?: number, estadoActivoId?: number) {
     const [data, total] = await prisma.$transaction([prisma.activo.findMany({
       skip, take: limit,
+      where: {
+        ...(categoriaId === undefined ? {} : { categoriaId }),
+        ...(estadoActivoId === undefined ? {} : { estadoActivoId }),
+      },
       select: {
         id: true,
         codigo: true,
         nombre: true,
         placa: true,
         anio: true,
+        fechaAdquisicion: true,
         kilometrajeActual: true,
         imagenUrl: true,
         modelo: { include: { marca: true } },
         categoria: true,
         estadoActivo: true,
+        _count: { select: { ordenes: true } },
       },
       orderBy: [{ fechaCreacion: "desc" }, { id: "desc" }],
-    }), prisma.activo.count()]);
-    return { data, total };
+    }), prisma.activo.count({ where: {
+      ...(categoriaId === undefined ? {} : { categoriaId }),
+      ...(estadoActivoId === undefined ? {} : { estadoActivoId }),
+    } })]);
+    return { data: data.map(({ _count, ...row }) => row.fechaAdquisicion instanceof Date
+      ? { ...row, cantidadOrdenes: _count?.ordenes ?? 0, antiguedadAnios: this.antiguedadAnios(row.fechaAdquisicion) }
+      : row), total };
   },
 
   async obtenerPorId(id: number) {
@@ -45,7 +56,9 @@ export const activoService = {
       },
     });
     if (!resultado) throw AppError.notFound("Vehículo no encontrado");
-    return resultado;
+    return resultado.fechaAdquisicion instanceof Date
+      ? { ...resultado, antiguedadAnios: this.antiguedadAnios(resultado.fechaAdquisicion), cantidadOrdenes: resultado.ordenes?.length ?? 0 }
+      : resultado;
   },
   async validarReferencias(data: UpdateActivoDto) {
     const references = [
@@ -87,5 +100,22 @@ export const activoService = {
       ...omitUndefined(rest), ...(fechaAdquisicion !== undefined ? { fechaAdquisicion: new Date(fechaAdquisicion) } : {}),
     } });
     return this.obtenerPorId(id);
+  },
+
+  async cambiarEstadoAdministrativo(id: number, estadoActivoId: number) {
+    if (![3, 4].includes(estadoActivoId)) throw AppError.badRequest("Solo se permiten los estados Fuera de Servicio o Dado de Baja");
+    return this.actualizar(id, { estadoActivoId });
+  },
+
+  async darDeBaja(id: number) {
+    return this.cambiarEstadoAdministrativo(id, 4);
+  },
+
+  antiguedadAnios(fecha: Date) {
+    const hoy = new Date();
+    let years = hoy.getFullYear() - fecha.getFullYear();
+    const anniversary = new Date(hoy.getFullYear(), fecha.getMonth(), fecha.getDate());
+    if (anniversary > hoy) years -= 1;
+    return Math.max(years, 0);
   },
 };

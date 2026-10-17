@@ -47,11 +47,13 @@ const ordenDetalleInclude = {
 } satisfies Prisma.OrdenMantenimientoInclude;
 
 export const ordenService = {
-  async listar() {
-    return prisma.ordenMantenimiento.findMany({
+  async listar(activoId?: number) {
+    const rows = await prisma.ordenMantenimiento.findMany({
+      ...(activoId === undefined ? {} : { where: { activoId } }),
       include: ordenResumenInclude,
       orderBy: [{ fechaSolicitud: "desc" }, { id: "desc" }],
     });
+    return rows.map(row => row.fechaSolicitud instanceof Date ? ({ ...row, diasTranscurridos: this.diasTranscurridos(row.fechaSolicitud) }) : row);
   },
 
   async listarPorUsuario(usuarioId: number) {
@@ -65,7 +67,7 @@ export const ordenService = {
   async obtenerPorId(id: number) {
     const resultado = await prisma.ordenMantenimiento.findUnique({ where: { id }, include: ordenDetalleInclude });
     if (!resultado) throw AppError.notFound("Orden de mantenimiento no encontrada");
-    return resultado;
+    return resultado.fechaSolicitud instanceof Date ? { ...resultado, diasTranscurridos: this.diasTranscurridos(resultado.fechaSolicitud) } : resultado;
   },
   async validarReferencias(data: UpdateOrdenDto) {
     if (data.activoId !== undefined) {
@@ -104,5 +106,9 @@ export const ordenService = {
       ...omitUndefined(rest),
       ...(fechaProgramada !== undefined ? { fechaProgramada: fechaProgramada ? new Date(fechaProgramada) : null } : {}),
     }, include: ordenDetalleInclude });
+  },
+
+  diasTranscurridos(fechaSolicitud: Date) {
+    return Math.max(0, Math.floor((Date.now() - fechaSolicitud.getTime()) / 86400000));
   },
 };
