@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "API Flota Mantenida - Guías 3 y 4",
-    "description": "Consultas de la guía 3 y validación, errores, paginación, creación y actualización de la guía 4. La carpeta Guía 4 crea vehículos y solicitudes reales: ejecutar en una base de desarrollo con el seed. Los IDs de las nuevas creaciones se guardan en variables separadas. No implementa autenticación ni el ciclo completo de mantenimiento.",
+    "name": "API Flota Mantenida - Avance 1",
+    "description": "Colección Postman v2.1 para consultas, CRUD, relaciones y validaciones del Avance 1. Ejecutar sobre una base MySQL migrada y sembrada. Las carpetas de Guía 4, imágenes e historiales contienen extensiones conservadas del proyecto.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -100,14 +100,42 @@
     {
       "key": "historialEstadoOrdenId",
       "value": "1"
+    },
+    {
+      "key": "categoriaCrudId",
+      "value": ""
+    },
+    {
+      "key": "tecnicoCrudId",
+      "value": ""
+    },
+    {
+      "key": "especialidadCrudId",
+      "value": ""
+    },
+    {
+      "key": "repuestoCrudId",
+      "value": ""
+    },
+    {
+      "key": "proveedorCrudId",
+      "value": ""
+    },
+    {
+      "key": "activoCrudId",
+      "value": ""
+    },
+    {
+      "key": "ordenCrudId",
+      "value": ""
     }
   ],
   "item": [
     {
-      "name": "Vehículos",
+      "name": "Activos",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar activos",
           "request": {
             "method": "GET",
             "header": [],
@@ -131,7 +159,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de activo",
           "request": {
             "method": "GET",
             "header": [],
@@ -153,7 +181,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de activo inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -175,7 +203,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar activo inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -195,6 +223,108 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Listar activos por categoría y estado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activo?categoriaId={{categoriaActivoId}}&estadoActivoId={{estadoActivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activo?categoriaId={{categoriaActivoId}}&estadoActivoId={{estadoActivoId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadOrdenes\");",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"antiguedadAnios\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar estado administrativo del activo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activo/{{activoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activo}}",
+                "{{activoId}}}}",
+                "estado}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoActivoId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dar de baja lógicamente el activo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activo/{{activoId}}/baja",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activo}}",
+                "{{activoId}}}}",
+                "baja}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -484,10 +614,10 @@
       ]
     },
     {
-      "name": "Categorías de vehículos",
+      "name": "Categorías de Activo",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar categorías de activo",
           "request": {
             "method": "GET",
             "header": [],
@@ -511,7 +641,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de categoría",
           "request": {
             "method": "GET",
             "header": [],
@@ -533,7 +663,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de categoría inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -555,7 +685,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar categoría inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -575,6 +705,147 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Registrar categoría de activo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categoriaActivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categoriaActivo}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Autobuses interurbanos\",\n  \"descripcion\": \"Categoría para autobuses de rutas interurbanas\",\n  \"intervaloKm\": 10000,\n  \"margenAlertaKm\": 1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success && body.data && body.data.id) pm.collectionVariables.set(\"categoriaCrudId\", String(body.data.id));",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadActivos\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle de categoría creada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categoriaActivo/{{categoriaCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categoriaActivo}}",
+                "{{categoriaCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadActivos\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar categoría de activo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categoriaActivo/{{categoriaCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categoriaActivo}}",
+                "{{categoriaCrudId}}}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"Categoría actualizada para mantenimiento preventivo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadActivos\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desactivar categoría sin activos asociados",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categoriaActivo/{{categoriaCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categoriaActivo}}",
+                "{{categoriaCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1342,7 +1613,7 @@
       "name": "Especialidad",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar especialidades",
           "request": {
             "method": "GET",
             "header": [],
@@ -1366,7 +1637,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de especialidad",
           "request": {
             "method": "GET",
             "header": [],
@@ -1388,7 +1659,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de especialidad inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -1410,7 +1681,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar especialidad inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -1430,6 +1701,114 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Registrar especialidad",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/especialidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "especialidad}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sistemas de freno pesado\",\n  \"descripcion\": \"Diagnóstico y reparación de sistemas de freno para vehículos pesados\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success && body.data && body.data.id) pm.collectionVariables.set(\"especialidadCrudId\", String(body.data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar especialidad",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/especialidad/{{especialidadCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "especialidad}}",
+                "{{especialidadCrudId}}}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"Diagnóstico y reparación especializada de frenos pesados\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle de especialidad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/especialidad/{{especialidadCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "especialidad}}",
+                "{{especialidadCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP undefined\", function () { pm.response.to.have.status(undefined); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1529,10 +1908,10 @@
       ]
     },
     {
-      "name": "Técnico",
+      "name": "Técnicos",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar técnicos",
           "request": {
             "method": "GET",
             "header": [],
@@ -1556,7 +1935,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de técnico",
           "request": {
             "method": "GET",
             "header": [],
@@ -1578,7 +1957,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de técnico inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -1600,7 +1979,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar técnico inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -1620,14 +1999,255 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Listar técnicos por disponibilidad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico?disponible=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico?disponible=true}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadEspecialidades\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar técnicos por especialidad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico?especialidadId={{especialidadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico?especialidadId={{especialidadId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadEspecialidades\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar técnico",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"TEC-CRUD-01\",\n  \"nombreCompleto\": \"María Fernanda Solís\",\n  \"telefono\": \"8888-0101\",\n  \"correo\": \"maria.solis.crud@example.com\",\n  \"tarifaHora\": 18500,\n  \"disponible\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success && body.data && body.data.id) pm.collectionVariables.set(\"tecnicoCrudId\", String(body.data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle de técnico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico/{{tecnicoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico}}",
+                "{{tecnicoCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadEspecialidades\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar técnico",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico/{{tecnicoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico}}",
+                "{{tecnicoCrudId}}}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"8888-0199\",\n  \"disponible\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Asociar especialidad a técnico",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico/{{tecnicoCrudId}}/especialidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico}}",
+                "{{tecnicoCrudId}}}}",
+                "especialidades}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"especialidadId\": {{especialidadId}},\n  \"nivelCertificacionId\": {{nivelCertificacionId}},\n  \"fechaCertificacion\": \"2024-02-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desasociar especialidad de técnico",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tecnico/{{tecnicoCrudId}}/especialidades/{{especialidadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tecnico}}",
+                "{{tecnicoCrudId}}}}",
+                "especialidades}}",
+                "{{especialidadId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Repuesto",
+      "name": "Repuestos",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar repuestos",
           "request": {
             "method": "GET",
             "header": [],
@@ -1651,7 +2271,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de repuesto",
           "request": {
             "method": "GET",
             "header": [],
@@ -1673,7 +2293,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de repuesto inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -1695,7 +2315,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar repuesto inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -1715,14 +2335,239 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Listar repuestos con stock bajo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repuesto/stock-bajo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repuesto}}",
+                "stock-bajo}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"stockBajo\");",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"faltanteStock\");",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadProveedores\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar repuesto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repuesto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repuesto}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"REP-CRUD-01\",\n  \"nombre\": \"Pastillas de freno para bus\",\n  \"descripcion\": \"Juego de pastillas para sistema de freno de autobús\",\n  \"unidadMedidaId\": {{unidadMedidaId}},\n  \"stockActual\": 4,\n  \"stockMinimo\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success && body.data && body.data.id) pm.collectionVariables.set(\"repuestoCrudId\", String(body.data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle de repuesto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repuesto/{{repuestoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repuesto}}",
+                "{{repuestoCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"stockBajo\");",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"faltanteStock\");",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"cantidadProveedores\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar repuesto",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repuesto/{{repuestoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repuesto}}",
+                "{{repuestoCrudId}}}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stockMinimo\": 12,\n  \"descripcion\": \"Juego reforzado de pastillas para autobús\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Asociar proveedor a repuesto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repuesto/{{repuestoCrudId}}/proveedores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repuesto}}",
+                "{{repuestoCrudId}}}}",
+                "proveedores}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proveedorId\": {{proveedorId}},\n  \"precio\": 45000,\n  \"tiempoEntregaDias\": 7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar condiciones del proveedor",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repuesto/{{repuestoCrudId}}/proveedores/{{proveedorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repuesto}}",
+                "{{repuestoCrudId}}}}",
+                "proveedores}}",
+                "{{proveedorId}}}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 47500,\n  \"tiempoEntregaDias\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Proveedor",
+      "name": "Proveedores",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar proveedores",
           "request": {
             "method": "GET",
             "header": [],
@@ -1746,7 +2591,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de proveedor",
           "request": {
             "method": "GET",
             "header": [],
@@ -1768,7 +2613,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de proveedor inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -1790,7 +2635,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar proveedor inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -1810,6 +2655,114 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Registrar proveedor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedor",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedor}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedulaJuridica\": \"3-101-CRUD01\",\n  \"nombre\": \"Suministros Mecánicos del Valle\",\n  \"contacto\": \"Carlos Méndez\",\n  \"telefono\": \"2222-0101\",\n  \"correo\": \"ventas.crud@example.com\",\n  \"direccion\": \"Zona Industrial, San José\",\n  \"condicionesGenerales\": \"Entrega programada y crédito empresarial\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success && body.data && body.data.id) pm.collectionVariables.set(\"proveedorCrudId\", String(body.data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle de proveedor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedor/{{proveedorCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedor}}",
+                "{{proveedorCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP undefined\", function () { pm.response.to.have.status(undefined); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar proveedor",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedor/{{proveedorCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedor}}",
+                "{{proveedorCrudId}}}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"2222-0199\",\n  \"condicionesGenerales\": \"Entrega programada, crédito y garantía de repuestos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1909,10 +2862,10 @@
       ]
     },
     {
-      "name": "Orden de mantenimiento",
+      "name": "Órdenes de Mantenimiento",
       "item": [
         {
-          "name": "Listar",
+          "name": "Listar órdenes de mantenimiento",
           "request": {
             "method": "GET",
             "header": [],
@@ -1936,7 +2889,7 @@
           "response": []
         },
         {
-          "name": "Obtener por ID",
+          "name": "Consultar detalle de orden",
           "request": {
             "method": "GET",
             "header": [],
@@ -1958,7 +2911,7 @@
           "response": []
         },
         {
-          "name": "ID inválido",
+          "name": "Rechazar ID de orden inválido",
           "request": {
             "method": "GET",
             "header": [],
@@ -1980,7 +2933,7 @@
           "response": []
         },
         {
-          "name": "Registro inexistente",
+          "name": "Consultar orden inexistente",
           "request": {
             "method": "GET",
             "header": [],
@@ -2066,6 +3019,107 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Listar órdenes por activo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orden?activoId={{activoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orden?activoId={{activoId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"diasTranscurridos\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear solicitud de mantenimiento CRUD",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orden}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"OM-2026-CRUD1\",\n  \"activoId\": {{activoId}},\n  \"tipoMantenimientoId\": {{tipoMantenimientoId}},\n  \"usuarioSolicitanteId\": {{usuarioId}},\n  \"motivo\": \"Revisión preventiva del sistema de frenos\",\n  \"kilometrajeAlSolicitar\": 25000,\n  \"fechaProgramada\": null,\n  \"estadoOrdenId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success && body.data && body.data.id) pm.collectionVariables.set(\"ordenCrudId\", String(body.data.id));",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"diasTranscurridos\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle de solicitud CRUD",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orden/{{ordenCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orden}}",
+                "{{ordenCrudId}}}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Respuesta uniforme\", function () { pm.expect(body.success).to.be.oneOf([true, false]); });",
+                  "if (body.success) pm.expect(body.data).to.have.property(\"diasTranscurridos\");"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
