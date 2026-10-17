@@ -1,0 +1,21 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+// Paleta del ejemplo de la profesora, adaptada a Material 3.
+$primary-palette: map.merge(
+  mat.$violet-palette,
+  (
+    40: #5c47bd,
+    80: #cdc3ff,
+    90: #e8deff,
+    95: #f3eeff,
+  )
+);
+$secondary-palette: map.get($primary-palette, secondary);
+$tertiary-palette: map.merge(
+  mat.$cyan-palette,
+  (
+    40: #006b56,
+    80: #15f5ba,
+    90: #a3f5d5,
+  )
+);

@@ -1,0 +1,43 @@
+<app-page-intro
+  title="Usuarios"
+  description="Consulta de solicitantes y roles. Esta pantalla no implementa autenticación ni gestión de permisos."
+/>
+@if (loading()) {
+  <p class="notice" role="status">Cargando usuarios…</p>
+} @else if (error()) {
+  <div class="notice" role="alert">
+    {{ error() }} <button mat-button (click)="load()">Reintentar</button>
+  </div>
+} @else {
+  <div class="table-container">
+    <table>
+      <caption class="sr-only">
+        Usuarios de la organización
+      </caption>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>
+              <strong>{{ user.nombreCompleto }}</strong>
+            </td>
+            <td>{{ user.correo }}</td>
+            <td>{{ user.rol.nombre }}</td>
+            <td>{{ user.activo ? 'Activo' : 'Inactivo' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">No hay usuarios registrados.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

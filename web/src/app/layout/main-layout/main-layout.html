@@ -1,0 +1,17 @@
+<div class="app-shell">
+  <app-header
+    [publicMenu]="publicMenu"
+    [maintenanceMenu]="maintenanceMenu"
+    [managementMenu]="managementMenu"
+    [currentUser]="currentUser()"
+    [isCoordinator]="isCoordinator()"
+    (selectRole)="selectRole($event)"
+    (logoutUser)="currentUser.set(null)"
+  />
+  <div class="demo-notice">
+    Aplicación de clase · Las vistas demo solo cambian el menú; no representan una sesión
+    autenticada.
+  </div>
+  <main id="main-content" class="content"><router-outlet /></main>
+  <app-footer />
+</div>

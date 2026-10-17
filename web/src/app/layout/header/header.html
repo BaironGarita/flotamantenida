@@ -1,0 +1,78 @@
+<header class="site-header">
+  <mat-toolbar class="toolbar">
+    <a class="brand" routerLink="/" aria-label="Flota Mantenida, inicio"
+      ><span class="brand-icon"><mat-icon>local_shipping</mat-icon></span
+      ><span><strong>Flota Mantenida</strong><small>Gestión de mantenimiento</small></span></a
+    >
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      @for (item of publicMenu(); track item.path) {
+        <a
+          mat-button
+          [routerLink]="item.path"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+          ><mat-icon>{{ item.icon }}</mat-icon
+          >{{ item.label }}</a
+        >
+      }
+      @if (isCoordinator()) {
+        <button mat-button [matMenuTriggerFor]="maintenance">
+          <mat-icon>settings</mat-icon>Catálogos</button
+        ><button mat-button [matMenuTriggerFor]="management">
+          <mat-icon>manage_accounts</mat-icon>Gestión
+        </button>
+      }
+    </nav>
+    <div class="spacer"></div>
+    @if (currentUser(); as user) {
+      <span class="demo-chip">{{ user.nombre }} <small>DEMO</small></span
+      ><button mat-button (click)="logoutUser.emit()">Salir</button>
+    } @else {
+      <button class="demo-button" mat-stroked-button [matMenuTriggerFor]="roles">
+        <mat-icon>visibility</mat-icon>Vista demo
+      </button>
+    }
+    <button
+      class="mobile-menu"
+      mat-icon-button
+      [matMenuTriggerFor]="mobile"
+      aria-label="Abrir menú"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+  </mat-toolbar>
+</header>
+<mat-menu #roles="matMenu"
+  ><button mat-menu-item (click)="selectRole.emit('SOLICITANTE')">Vista solicitante</button
+  ><button mat-menu-item (click)="selectRole.emit('COORDINADOR')">
+    Vista coordinador
+  </button></mat-menu
+>
+<mat-menu #maintenance="matMenu">
+  @for (item of maintenanceMenu(); track item.path) {
+    <a mat-menu-item [routerLink]="item.path"
+      ><mat-icon>{{ item.icon }}</mat-icon
+      >{{ item.label }}</a
+    >
+  }
+</mat-menu>
+<mat-menu #management="matMenu">
+  @for (item of managementMenu(); track item.path) {
+    <a mat-menu-item [routerLink]="item.path"
+      ><mat-icon>{{ item.icon }}</mat-icon
+      >{{ item.label }}</a
+    >
+  }
+</mat-menu>
+<mat-menu #mobile="matMenu">
+  @for (item of publicMenu(); track item.path) {
+    <a mat-menu-item [routerLink]="item.path"
+      ><mat-icon>{{ item.icon }}</mat-icon
+      >{{ item.label }}</a
+    >
+  }
+  @if (isCoordinator()) {
+    <button mat-menu-item [matMenuTriggerFor]="maintenance">Catálogos</button
+    ><button mat-menu-item [matMenuTriggerFor]="management">Gestión</button>
+  }
+</mat-menu>

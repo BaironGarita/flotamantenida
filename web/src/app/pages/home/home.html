@@ -1,0 +1,69 @@
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow"><span class="status-dot"></span>CONTROL DE FLOTA</span>
+    <h1>Tu flota,<br /><span>siempre en ruta.</span></h1>
+    <p>Organizá tus vehículos y sus solicitudes de mantenimiento desde un mismo espacio.</p>
+    <div class="hero-actions">
+      <a mat-flat-button routerLink="/vehiculos"
+        >Ver vehículos<mat-icon iconPositionEnd>arrow_forward</mat-icon></a
+      ><a mat-stroked-button routerLink="/ordenes">Consultar órdenes</a>
+    </div>
+    <div class="hero-note">
+      <mat-icon>verified</mat-icon>Información conectada a la API del proyecto
+    </div>
+  </div>
+  <div class="hero-visual" aria-hidden="true">
+    <div class="road-circle"></div>
+    <svg viewBox="0 0 440 300">
+      <path d="M30 260h370" stroke="#c6bddf" stroke-width="2" />
+      <rect x="65" y="86" width="210" height="141" rx="12" fill="#211951" />
+      <path d="M275 135h64l46 54v38H275z" fill="#836fff" />
+      <path d="M295 150h37l30 36h-67z" fill="#efecff" />
+      <rect x="83" y="105" width="174" height="6" rx="3" fill="#836fff" />
+      <rect x="83" y="119" width="125" height="6" rx="3" fill="#836fff" opacity=".5" />
+      <rect x="65" y="222" width="325" height="14" rx="4" fill="#211951" />
+      <circle cx="124" cy="234" r="27" fill="#29263b" />
+      <circle cx="124" cy="234" r="12" fill="#f1eef8" />
+      <circle cx="329" cy="234" r="27" fill="#29263b" />
+      <circle cx="329" cy="234" r="12" fill="#f1eef8" />
+      <rect x="360" y="201" width="16" height="8" rx="2" fill="#d5fff0" />
+      <path
+        d="m98 169 10 10 22-25"
+        fill="none"
+        stroke="#15f5ba"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    <div class="visual-label">
+      <mat-icon>build_circle</mat-icon>
+      <div>
+        <strong>Mantenimiento organizado</strong><span>De la solicitud al seguimiento</span>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-heading">
+  <div>
+    <span class="eyebrow">ESPACIO DE TRABAJO</span>
+    <h2>Todo lo que necesitás consultar</h2>
+  </div>
+  <span class="section-label">Flota Mantenida / Gestión vehicular</span>
+</div>
+<section class="summary-grid">
+  @for (card of cards; track card.path) {
+    <mat-card class="summary-card"
+      ><div class="card-top">
+        <span class="card-icon"
+          ><mat-icon>{{ card.icon }}</mat-icon></span
+        ><span class="card-number">{{ card.number }}</span>
+      </div>
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.description }}</p>
+      <a mat-button [routerLink]="card.path"
+        >Explorar<mat-icon iconPositionEnd>arrow_forward</mat-icon></a
+      ></mat-card
+    >
+  }
+</section>

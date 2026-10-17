@@ -1,0 +1,49 @@
+<app-page-intro
+  title="Órdenes de mantenimiento"
+  description="Consulta de solicitudes y datos de mantenimiento de los vehículos."
+/>
+@if (loading()) {
+  <p class="notice" role="status">Cargando órdenes…</p>
+} @else if (error()) {
+  <div class="notice" role="alert">
+    {{ error() }} <button mat-button (click)="load()">Reintentar</button>
+  </div>
+} @else {
+  <div class="table-container">
+    <table>
+      <caption class="sr-only">
+        Órdenes de mantenimiento
+      </caption>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Vehículo</th>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (order of orders(); track order.id) {
+          <tr>
+            <td>
+              <strong>{{ order.codigo }}</strong>
+            </td>
+            <td>
+              {{ order.activo.codigo }}<small>{{ order.activo.nombre }}</small>
+            </td>
+            <td>{{ order.tipoMantenimiento.nombre }}</td>
+            <td>{{ order.fechaSolicitud | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ order.prioridad?.nombre || 'Sin definir' }}</td>
+            <td>{{ order.estadoOrden.nombre }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">No hay órdenes registradas.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

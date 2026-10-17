@@ -1,0 +1,72 @@
+<app-page-intro
+  title="Vehículos"
+  description="Consultá las unidades de la flota, sus imágenes y su estado actual."
+/>
+@if (loading()) {
+  <p role="status" class="notice">Cargando vehículos…</p>
+} @else if (error()) {
+  <div class="notice" role="alert">
+    <p>{{ error() }}</p>
+    <button mat-stroked-button (click)="load()">Reintentar</button>
+  </div>
+} @else {
+  <div class="vehicle-grid">
+    @for (vehicle of vehicles(); track vehicle.id) {
+      <mat-card class="vehicle-card">
+        @if (api.imageUrl(vehicle.imagenUrl); as image) {
+          @if (!broken().has(vehicle.id)) {
+            <img
+              [src]="image"
+              [alt]="vehicle.nombre"
+              (error)="imageFailed(vehicle.id)"
+              loading="lazy"
+            />
+          } @else {
+            <div class="image-placeholder">
+              <mat-icon>local_shipping</mat-icon><span>Sin imagen disponible</span>
+            </div>
+          }
+        } @else {
+          <div class="image-placeholder">
+            <mat-icon>local_shipping</mat-icon><span>Sin imagen disponible</span>
+          </div>
+        }
+        <div class="vehicle-content">
+          <div class="vehicle-meta">
+            <span>{{ vehicle.codigo }}</span
+            ><span class="state">{{ vehicle.estadoActivo.nombre }}</span>
+          </div>
+          <h2>{{ vehicle.nombre }}</h2>
+          <p>
+            {{ vehicle.modelo.marca.nombre }} · {{ vehicle.modelo.nombre }} · {{ vehicle.anio }}
+          </p>
+          <div class="vehicle-bottom">
+            <span>{{ vehicle.placa }}</span
+            ><span>{{ vehicle.kilometrajeActual | number: '1.0-0' }} km</span>
+          </div>
+        </div></mat-card
+      >
+    } @empty {
+      <p class="notice">No hay vehículos registrados.</p>
+    }
+  </div>
+  @if (meta(); as pagination) {
+    <div class="pagination">
+      <span
+        >{{ pagination.total }} vehículos · Página {{ pagination.page }} de
+        {{ pagination.totalPages || 1 }}</span
+      >
+      <div>
+        <button mat-button [disabled]="!pagination.hasPrevPage" (click)="load(pagination.page - 1)">
+          Anterior</button
+        ><button
+          mat-button
+          [disabled]="!pagination.hasNextPage"
+          (click)="load(pagination.page + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  }
+}
