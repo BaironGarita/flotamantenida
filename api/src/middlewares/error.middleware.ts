@@ -1,3 +1,4 @@
+import multer from "multer";
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/app-error";
 import { mapPrismaError } from "../utils/prisma-error.mapper";
@@ -8,6 +9,9 @@ export class ErrorMiddleware {
   static handleError(error: unknown, req: Request, res: Response, next: NextFunction): void {
     if (res.headersSent) { next(error); return; }
     let appError = error instanceof AppError ? error : mapPrismaError(error, req.method);
+    if (error instanceof multer.MulterError) {
+      appError = AppError.badRequest(error.code === "LIMIT_FILE_SIZE" ? "La imagen no puede superar 2 MB" : "Formulario inválido: envíe una sola imagen en el campo image");
+    }
     if (!appError && error instanceof SyntaxError && "status" in error && error.status === 400) {
       appError = AppError.badRequest("JSON inválido");
     }

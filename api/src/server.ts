@@ -8,6 +8,8 @@ import { notFoundHandler } from "./middlewares/not-found.middleware";
 import { sendSuccess } from "./utils/http-response";
 import { prisma } from "./config/prisma";
 
+import { uploadDir } from "./middlewares/image-config.middleware";
+
 export const app = express();
 const port = Number(process.env.PORT || 3000);
 
@@ -25,6 +27,7 @@ app.get("/", (request, response) => {
 
 // ---- Definir rutas ----
 app.use(AppRoutes.routes);
+app.use("/images", express.static(uploadDir, { dotfiles: "deny", index: false }));
 app.use(notFoundHandler);
 
 // Middleware centralizado para manejar errores.

@@ -2873,6 +2873,85 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Imágenes - Guía de carga",
+      "description": "En cada solicitud de carga, seleccionar un archivo JPG, PNG o WEBP local de hasta 2 MB en el campo image de form-data. No establecer Content-Type manualmente. La carpeta no se ejecuta automáticamente sin elegir archivos.",
+      "item": [
+        {
+          "name": "Subir imagen",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/images/upload",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "previousFileName",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Imagen creada\",()=>pm.response.to.have.status(201));",
+                  "const body=pm.response.json(); if(body.success) pm.collectionVariables.set(\"imagenSubida\",body.data.fileName);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar imágenes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/images/files"
+          }
+        },
+        {
+          "name": "Descargar imagen",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/images/download/{{imagenSubida}}"
+          }
+        },
+        {
+          "name": "Ver imagen pública",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/images/{{imagenSubida}}"
+          }
+        },
+        {
+          "name": "Actualizar imagen de vehículo de prueba",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/activo/{{activoCreadoGuia4Id}}/imagen",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }

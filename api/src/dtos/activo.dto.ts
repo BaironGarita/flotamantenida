@@ -19,7 +19,7 @@ const activoFields = z.object({
     .refine(value => Number(value.toFixed(2)) === value, "Solo se permiten dos decimales"),
   kilometrajeRegistro: km,
   kilometrajeActual: km,
-  imagenUrl: z.string({ error: "Debe ser un texto" }).trim().min(1, "Debe tener al menos 1 caracteres").max(500, "No puede superar 500 caracteres").nullable().optional(),
+  imagenUrl: z.string({ error: "Debe ser un texto" }).trim().regex(/^[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/i, "Guarde solo el nombre de la imagen JPG, PNG o WEBP").max(500).nullable().optional(),
 }).strict();
 
 export const createActivoSchema = activoFields.refine(

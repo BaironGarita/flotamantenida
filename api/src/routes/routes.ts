@@ -22,6 +22,8 @@ import { OrdenRoutes } from "./orden.routes";
 import { HistorialEstadoActivoRoutes } from "./historial-estado-activo.routes";
 import { HistorialEstadoOrdenRoutes } from "./historial-estado-orden.routes";
 
+import { ImageRoutes } from "./image.routes";
+
 export class AppRoutes {
   static get routes(): Router {
     const router = Router();
@@ -47,6 +49,7 @@ export class AppRoutes {
     router.use("/orden", OrdenRoutes.routes);
     router.use("/historialEstadoActivo", HistorialEstadoActivoRoutes.routes);
     router.use("/historialEstadoOrden", HistorialEstadoOrdenRoutes.routes);
+    router.use("/images", ImageRoutes.routes);
     return router;
   }
 }

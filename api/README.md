@@ -128,3 +128,21 @@ La imagen se registra o actualiza mediante imagenUrl; esta guía no agrega carga
 Un cambio de estado del vehículo se rechaza si tiene órdenes abiertas; Rechazada, Completada y Cancelada se consideran finales. Las solicitudes no permiten cambiar de estado, costo, diagnóstico, técnicos o repuestos mediante estos endpoints. usuarioSolicitanteId es un dato de demostración, no una identidad autenticada.
 
 Los errores de Prisma P2002/P2025/P2003/P2014 se traducen a 409/404/400 según el método HTTP. El servidor responde un mensaje genérico ante errores inesperados. Los logs no guardan el body ni credenciales; se generan localmente en logs/.
+
+## Guía de imágenes
+
+Los archivos se guardan en assets/uploads y se sirven desde /images/nombre.ext. Se aceptan JPG, PNG y WEBP, con un máximo de 2 MB y validación de extensión, tipo y firma. Los nombres nuevos son únicos. Las imágenes subidas no se versionan; las 12 ilustraciones del seed sí se incluyen.
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| POST | /images/upload | multipart/form-data, campo image; devuelve data.fileName y data.url. |
+| GET | /images/files | Listar nombres y URLs de imágenes. |
+| GET | /images/download/:name | Descargar un archivo. |
+| GET | /images/:name | Acceder a una imagen pública. |
+| PUT | /activo/:id/imagen | Subir y guardar la imagen del vehículo en una operación. |
+
+La base guarda solo el nombre del archivo. El seed fue actualizado para usar los nombres locales; no es necesario ni recomendable volver a ejecutar el seed sobre los datos actuales. Angular reconoce también las rutas uploads/activos del seed anterior.
+
+previousFileName es opcional al subir: elimina una imagen anterior solamente cuando ya no está asociada a vehículos. Para reemplazar imágenes de un vehículo, usar PUT /activo/:id/imagen; primero guarda el nombre nuevo y después limpia el anterior. Las imágenes compartidas y las ilustraciones del seed se conservan. Si falla la validación o la escritura en la base, se elimina la subida nueva. Las pruebas de imágenes usan una carpeta temporal, nunca los archivos del proyecto.
+
+Las solicitudes de carga de Postman requieren seleccionar un archivo local manualmente. No establecer Content-Type: el cliente genera el boundary de multipart. La API mantiene el manejo global de errores de la guía 4; Multer responde 400 para exceso de tamaño o campo incorrecto.
