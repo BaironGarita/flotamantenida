@@ -34,16 +34,28 @@
         <div class="vehicle-content">
           <div class="vehicle-meta">
             <span>{{ vehicle.codigo }}</span
-            ><span class="state">{{ vehicle.estadoActivo.nombre }}</span>
+            ><span
+              class="state"
+              [class.state--operational]="vehicle.estadoActivo.nombre === 'Operativo'"
+              [class.state--maintenance]="vehicle.estadoActivo.nombre === 'En Mantenimiento'"
+              [class.state--unavailable]="vehicle.estadoActivo.nombre === 'Fuera de Servicio'"
+              >{{ vehicle.estadoActivo.nombre }}</span
+            >
           </div>
           <h2>{{ vehicle.nombre }}</h2>
           <p>
             {{ vehicle.modelo.marca.nombre }} · {{ vehicle.modelo.nombre }} · {{ vehicle.anio }}
           </p>
-          <div class="vehicle-bottom">
-            <span>{{ vehicle.placa }}</span
-            ><span>{{ vehicle.kilometrajeActual | number: '1.0-0' }} km</span>
-          </div>
+          <dl class="vehicle-bottom">
+            <div>
+              <dt>Placa</dt>
+              <dd>{{ vehicle.placa }}</dd>
+            </div>
+            <div>
+              <dt>Kilometraje</dt>
+              <dd>{{ vehicle.kilometrajeActual | number: '1.0-0' }} km</dd>
+            </div>
+          </dl>
         </div></mat-card
       >
     } @empty {
