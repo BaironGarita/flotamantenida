@@ -108,6 +108,9 @@ export const activoService = {
   },
 
   async darDeBaja(id: number) {
+    await this.obtenerPorId(id);
+    const asociadas = await prisma.ordenMantenimiento.count({ where: { activoId: id } });
+    if (asociadas > 0) throw AppError.conflict("No se puede dar de baja un vehículo con órdenes asociadas");
     return this.cambiarEstadoAdministrativo(id, 4);
   },
 

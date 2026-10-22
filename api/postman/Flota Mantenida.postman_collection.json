@@ -3066,7 +3066,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigo\": \"OM-2026-CRUD1\",\n  \"activoId\": {{activoId}},\n  \"tipoMantenimientoId\": {{tipoMantenimientoId}},\n  \"usuarioSolicitanteId\": {{usuarioId}},\n  \"motivo\": \"Revisión preventiva del sistema de frenos\",\n  \"kilometrajeAlSolicitar\": 25000,\n  \"fechaProgramada\": null,\n  \"estadoOrdenId\": 1\n}",
+              "raw": "{\n  \"codigo\": \"OM-2026-9001\",\n  \"activoId\": {{activoId}},\n  \"tipoMantenimientoId\": {{tipoMantenimientoId}},\n  \"usuarioSolicitanteId\": {{usuarioId}},\n  \"motivo\": \"Revisión preventiva del sistema de frenos\",\n  \"kilometrajeAlSolicitar\": 25000,\n  \"fechaProgramada\": null,\n  \"estadoOrdenId\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"

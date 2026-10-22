@@ -32,7 +32,11 @@ export const categoriaActivoService = {
   },
 
   async actualizar(id: number, data: UpdateCategoriaActivoDto) {
-    await this.obtenerPorId(id);
+    const category = await prisma.categoriaActivo.findUnique({ where: { id }, include: { _count: { select: { activos: true } } } });
+    if (!category) throw AppError.notFound("Categoría de vehículo no encontrada");
+    if (data.activo === false && category._count.activos > 0) {
+      throw AppError.conflict("No se puede desactivar una categoría con activos asociados");
+    }
     const row = await prisma.categoriaActivo.update({ where: { id }, data: omitUndefined(data), include: { _count: { select: { activos: true } } } });
     return this.withCalculated(row);
   },

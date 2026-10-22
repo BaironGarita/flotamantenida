@@ -162,3 +162,11 @@ La base guarda solo el nombre del archivo. El seed fue actualizado para usar los
 previousFileName es opcional al subir: elimina una imagen anterior solamente cuando ya no está asociada a vehículos. Para reemplazar imágenes de un vehículo, usar PUT /activo/:id/imagen; primero guarda el nombre nuevo y después limpia el anterior. Las imágenes compartidas y las ilustraciones del seed se conservan. Si falla la validación o la escritura en la base, se elimina la subida nueva. Las pruebas de imágenes usan una carpeta temporal, nunca los archivos del proyecto.
 
 Las solicitudes de carga de Postman requieren seleccionar un archivo local manualmente. No establecer Content-Type: el cliente genera el boundary de multipart. La API mantiene el manejo global de errores de la guía 4; Multer responde 400 para exceso de tamaño o campo incorrecto.
+
+### Ajustes de validación del Avance 1
+
+La desactivación de categorías comprueba los activos asociados tanto en DELETE como en PUT con activo=false.
+PUT /activo/:id/baja rechaza cualquier orden asociada, incluso cerrada, conforme al contrato de baja lógica del avance. El cambio administrativo mediante /estado conserva su regla específica de bloquear órdenes abiertas.
+Los técnicos incluyen antiguedadAnios en cada especialidad, calculada como años completos desde fechaCertificacion, además de cantidadEspecialidades.
+Las tarifas y precios aceptan como máximo dos decimales y respetan los rangos Decimal(10,2) y Decimal(12,2) del modelo. Los DTO de técnicos y proveedores limitan el correo a 150 caracteres.
+El ejemplo de orden de Postman usa OM-2026-9001: para repetir la creación se debe elegir otro código válido que no exista. Las pruebas automáticas de estas reglas utilizan Prisma simulado y no modifican la base real.

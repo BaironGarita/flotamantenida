@@ -3,6 +3,15 @@ import { prisma } from "../config/prisma";
 import type { AssociateTecnicoEspecialidadDto, CreateTecnicoDto, UpdateTecnicoDto } from "../dtos/catalog-crud.dto";
 import { omitUndefined } from "../utils/omit-undefined";
 
+import { elapsedYears } from "../utils/elapsed-years";
+
+function withCalculated<T extends { especialidades?: { fechaCertificacion: Date }[] }>(row: T) {
+  if (!row.especialidades) return row;
+  return { ...row, cantidadEspecialidades: row.especialidades.length,
+    especialidades: row.especialidades.map(relation => ({ ...relation, antiguedadAnios: elapsedYears(relation.fechaCertificacion) })),
+  };
+}
+
 export const tecnicoService = {
   async listar(especialidadId?: number, disponible?: boolean) {
     const rows = await prisma.tecnico.findMany({
@@ -13,7 +22,7 @@ export const tecnicoService = {
       include: { especialidades: { include: { especialidad: true, nivelCertificacion: true } } },
       orderBy: [{ nombreCompleto: "asc" }, { id: "asc" }],
     });
-    return rows.map(row => row.especialidades ? ({ ...row, cantidadEspecialidades: row.especialidades.length }) : row);
+    return rows.map(row => withCalculated(row));
   },
 
   async obtenerPorId(id: number) {
@@ -22,7 +31,7 @@ export const tecnicoService = {
       include: { especialidades: { include: { especialidad: true, nivelCertificacion: true } }, asignaciones: { include: { orden: true }, orderBy: { fechaAsignacion: "desc" } } },
     });
     if (!resultado) throw AppError.notFound("Técnico no encontrado");
-    return resultado.especialidades ? { ...resultado, cantidadEspecialidades: resultado.especialidades.length } : resultado;
+    return withCalculated(resultado);
   },
 
   async crear(data: CreateTecnicoDto) {

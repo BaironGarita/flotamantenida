@@ -91,9 +91,10 @@ export const ordenService = {
     await this.validarReferencias(data);
     const solicitada = await prisma.estadoOrden.findUnique({ where: { id: 1 } });
     if (!solicitada || solicitada.nombre !== "Solicitada") throw AppError.internalServer();
-    return prisma.ordenMantenimiento.create({ data: {
+    const created = await prisma.ordenMantenimiento.create({ data: {
       ...omitUndefined(data), estadoOrdenId: 1, fechaProgramada: data.fechaProgramada ? new Date(data.fechaProgramada) : null,
     }, include: ordenDetalleInclude });
+    return created.fechaSolicitud instanceof Date ? { ...created, diasTranscurridos: this.diasTranscurridos(created.fechaSolicitud) } : created;
   },
   async actualizar(id: number, data: UpdateOrdenDto) {
     const current = await this.obtenerPorId(id);

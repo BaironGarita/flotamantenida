@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const id = z.number({ error: "Debe ser un ID numérico" }).int().positive().max(2147483647);
 const text = (min: number, max: number) => z.string().trim().min(min).max(max);
-const nonNegative = z.number().finite().min(0);
+const money = (max: number) => z.number().finite().min(0).max(max).multipleOf(0.01, "Solo se permiten dos decimales");
 const date = z.iso.date();
 
 export const createCategoriaActivoSchema = z.object({
@@ -18,8 +18,8 @@ export const createTecnicoSchema = z.object({
   identificacion: text(1, 20),
   nombreCompleto: text(3, 150),
   telefono: text(3, 30),
-  correo: z.email(),
-  tarifaHora: nonNegative,
+  correo: z.email().max(150),
+  tarifaHora: money(99999999.99),
   disponible: z.boolean().optional(),
   activo: z.boolean().optional(),
 }).strict();
@@ -48,7 +48,7 @@ export const createProveedorSchema = z.object({
   nombre: text(2, 150),
   contacto: text(2, 150),
   telefono: text(3, 30),
-  correo: z.email(),
+  correo: z.email().max(150),
   direccion: text(3, 255),
   condicionesGenerales: text(0, 500).nullable().optional(),
   activo: z.boolean().optional(),
@@ -63,7 +63,7 @@ export const associateTecnicoEspecialidadSchema = z.object({
 
 export const associateRepuestoProveedorSchema = z.object({
   proveedorId: id,
-  precio: nonNegative,
+  precio: money(9999999999.99),
   tiempoEntregaDias: z.number().int().min(0).max(65535),
 }).strict();
 
