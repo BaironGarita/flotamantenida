@@ -1,6 +1,6 @@
 // =====================================================================
 //  Seeder - Flota vehicular
-//  Ejecutar:  npx prisma migrate reset   (borra, migra y siembra)
+//  Base nueva de pruebas: npx prisma migrate deploy y luego npx prisma db seed
 //        o:   npx prisma db seed
 //  Los datos son coherentes entre sí: estados de órdenes, estados de
 //  vehículos, historial, stock y costos cuadran.
@@ -196,6 +196,7 @@ async function main() {
       { id: 4, nombre: "Microbús", descripcion: "Transporte de personal hasta 30 pasajeros (prefijo MBS)", intervaloKm: 10000, margenAlertaKm: 1000 },
       { id: 5, nombre: "Pickup", descripcion: "Apoyo y supervisión de campo (prefijo PCK)", intervaloKm: 8000, margenAlertaKm: 800 },
       { id: 6, nombre: "Vehículo administrativo", descripcion: "Sedanes y SUV de uso administrativo (prefijo VAD)", intervaloKm: 7000, margenAlertaKm: 700 },
+      { id: 8, nombre: "Vehículo de inspección", descripcion: "Unidades para inspección de rutas (prefijo VIN)", intervaloKm: 8000, margenAlertaKm: 800 },
       { id: 7, nombre: "Motocicleta de mensajería", descripcion: "Categoría descontinuada (prefijo MOT)", intervaloKm: 4000, margenAlertaKm: 400, activo: false },
     ],
   });
@@ -284,7 +285,6 @@ async function main() {
       { id: 10, codigo: "REP-0010", nombre: "Llanta 295/80R22.5", descripcion: "Radial para camión y autobús", unidadMedidaId: 1, stockActual: 10, stockMinimo: 12 },
       { id: 11, codigo: "REP-0011", nombre: "Aceite de transmisión 80W-90", descripcion: "Caja y diferencial", unidadMedidaId: 2, stockActual: 30, stockMinimo: 15 },
       { id: 12, codigo: "REP-0012", nombre: "Filtro de combustible diésel", descripcion: "Separador de agua", unidadMedidaId: 1, stockActual: 18, stockMinimo: 8 },
-      { id: 13, codigo: "REP-0013", nombre: "Carburador motocicleta 150cc", descripcion: "Descontinuado junto con la categoría de motos", unidadMedidaId: 1, stockActual: 2, stockMinimo: 0, activo: false },
     ],
   });
 
@@ -318,7 +318,6 @@ async function main() {
       oferta(10, 5, 165000, 4), oferta(10, 2, 172000, 2),
       oferta(11, 6, 5200, 1), oferta(11, 1, 5900, 2),
       oferta(12, 7, 9800, 3), oferta(12, 2, 10400, 2),
-      oferta(13, 9, 18000, 5),
     ],
   });
 
