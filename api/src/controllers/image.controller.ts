@@ -1,3 +1,4 @@
+import { activoResponseDto } from "../dtos/response.dto";
 import type { Request, Response, NextFunction } from "express";
 import { imageService } from "../services/image.service";
 import { sendSuccess, sendCreated } from "../utils/http-response";
@@ -14,6 +15,6 @@ export class ImageController {
     response.download(filePath, error => { if (error) next(error); });
   };
   updateActivo = async (request: Request, response: Response) => {
-    return sendSuccess(response, await imageService.updateActivoImage(parseId(request.params.id), request.file), "Imagen del vehículo actualizada correctamente");
+    return sendSuccess(response, activoResponseDto(await imageService.updateActivoImage(parseId(request.params.id), request.file)), "Imagen del vehículo actualizada correctamente");
   };
 }

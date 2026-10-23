@@ -57,11 +57,12 @@ export const ordenService = {
   },
 
   async listarPorUsuario(usuarioId: number) {
-    return prisma.ordenMantenimiento.findMany({
+    const rows = await prisma.ordenMantenimiento.findMany({
       where: { usuarioSolicitanteId: usuarioId },
       include: ordenResumenInclude,
       orderBy: [{ fechaSolicitud: "desc" }, { id: "desc" }],
     });
+    return rows.map(row => row.fechaSolicitud instanceof Date ? { ...row, diasTranscurridos: this.diasTranscurridos(row.fechaSolicitud) } : row);
   },
 
   async obtenerPorId(id: number) {
@@ -72,7 +73,7 @@ export const ordenService = {
   async validarReferencias(data: UpdateOrdenDto) {
     if (data.activoId !== undefined) {
       const activo = await prisma.activo.findUnique({ where: { id: data.activoId } });
-      if (!activo) throw AppError.badRequest("El vehículo indicado no existe");
+      if (!activo) throw AppError.notFound("El vehículo indicado no existe");
       if (activo.estadoActivoId === 4) throw AppError.badRequest("El vehículo está dado de baja");
     }
     if (data.usuarioSolicitanteId !== undefined) {
@@ -103,10 +104,11 @@ export const ordenService = {
     await this.validarReferencias(data);
     const { fechaProgramada, ...rest } = data;
     // Edición de la solicitud, sin transiciones, repuestos ni asignación de técnicos.
-    return prisma.ordenMantenimiento.update({ where: { id }, data: {
+    const updated = await prisma.ordenMantenimiento.update({ where: { id }, data: {
       ...omitUndefined(rest),
       ...(fechaProgramada !== undefined ? { fechaProgramada: fechaProgramada ? new Date(fechaProgramada) : null } : {}),
     }, include: ordenDetalleInclude });
+    return updated.fechaSolicitud instanceof Date ? { ...updated, diasTranscurridos: this.diasTranscurridos(updated.fechaSolicitud) } : updated;
   },
 
   diasTranscurridos(fechaSolicitud: Date) {

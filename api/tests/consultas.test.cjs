@@ -123,14 +123,16 @@ async function request(route) {
 }
 for (const resource of resources) {
   test(resource.path + ': listado y listado vacío', async () => {
-    const records = [{ id: 7, nombre: 'Dato de prueba' }];
+    const records = [resource.path === '/tecnico' ? { id: 7, nombreCompleto: 'Técnico de prueba' }
+      : resource.path === '/orden' ? { id: 7, codigo: 'OM-2026-0007' } : { id: 7, nombre: 'Dato de prueba' }];
     prisma[resource.model].findMany = async () => records;
     assert.deepEqual(await request(resource.path), { status: 200, body: { success: true, data: records } });
     prisma[resource.model].findMany = async () => [];
     assert.deepEqual(await request(resource.path), { status: 200, body: { success: true, data: [] } });
   });
   test(resource.path + ': detalle del ID solicitado', async () => {
-    const record = { id: 7, nombre: 'Dato de prueba' };
+    const record = resource.path === '/tecnico' ? { id: 7, nombreCompleto: 'Técnico de prueba' }
+      : resource.path === '/orden' ? { id: 7, codigo: 'OM-2026-0007' } : { id: 7, nombre: 'Dato de prueba' };
     prisma[resource.model].findUnique = async ({ where }) => {
       assert.equal(where.id, 7);
       return record;

@@ -108,7 +108,7 @@ test('crear solicitud fija Solicitada y no acepta costos o transiciones', async 
 });
 test('orden valida vehículo, solicitante y tipo de mantenimiento', async () => {
   stub('activo','findUnique',async()=>null);
-  assert.equal((await request('/orden','POST',order)).status,400);
+  assert.equal((await request('/orden','POST',order)).status,404);
   stub('activo','findUnique',async()=>({id:55,estadoActivoId:1}));
   stub('usuario','findUnique',async()=>({id:1,activo:false}));
   assert.equal((await request('/orden','POST',order)).status,400);
